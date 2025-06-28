@@ -1,11 +1,12 @@
 export default () => ({
     // Database configuration
-    database: {
+    db: {
         host: process.env.DB_HOST ?? 'localhost',
         port: parseInt(process.env.DB_PORT ?? '5432', 10),
         username: process.env.DB_USERNAME ?? 'postgres',
         password: process.env.DB_PASSWORD ?? '',
         name: process.env.DB_DATABASE ?? 'nestjs_db',
+        logging: process.env.DB_LOGGING === 'true',
     },
 
     // JWT configuration
