@@ -21,8 +21,7 @@ function AuthCallbackInner() {
         if (!accessToken) {
           throw new Error("No access token received");
         } else {
-          router.replace("/dashboard");
-          // Lưu accessToken vào zustand
+          // Lưu accessToken vào zustand trước
           setAuth(null, accessToken);
         }
 
@@ -43,6 +42,15 @@ function AuthCallbackInner() {
 
         // Lưu trạng thái vào Zustand store
         setAuth(user, accessToken);
+
+        // Kiểm tra có returnUrl không để redirect về trang gốc
+        const returnUrl = localStorage.getItem("returnUrl");
+        if (returnUrl) {
+          localStorage.removeItem("returnUrl"); // Xóa sau khi sử dụng
+          router.replace(returnUrl);
+        } else {
+          router.replace("/dashboard"); // Default redirect
+        }
       } catch (error) {
         console.error("Auth callback error:", error);
         router.replace("/?error=callback_failed");
