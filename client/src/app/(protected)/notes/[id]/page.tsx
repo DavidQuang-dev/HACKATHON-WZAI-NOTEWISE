@@ -24,7 +24,10 @@ export default function SummaryPage() {
         <Card className="bg-gradient-to-br from-gray-50 to-blue-50/30">
           <CardContent className="p-6">
             <div className="prose max-w-none">
-              <Markdown remarkPlugins={[remarkGfm]}>{note?.summarizedTranscript}</Markdown>
+              <h4 className="text-lg font-semibold mb-2">
+                {note?.summarizedTranscript?.name_vi}
+              </h4>
+              <Markdown remarkPlugins={[remarkGfm]}>{note?.summarizedTranscript?.description_vi}</Markdown>
             </div>
           </CardContent>
         </Card>

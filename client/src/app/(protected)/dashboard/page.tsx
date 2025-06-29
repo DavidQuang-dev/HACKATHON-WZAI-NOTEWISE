@@ -196,7 +196,7 @@ export default function DashboardPage() {
                               : "N/A"}
                           </TableCell>
                           <TableCell className="text-gray-600 w-2/5">
-                            <div className="truncate">{note.description}</div>
+                            <div className="truncate">{note.description_vi}</div>
                           </TableCell>
                           <TableCell className="w-32 text-center">
                             <Link href={`/notes/${note.id}`}>

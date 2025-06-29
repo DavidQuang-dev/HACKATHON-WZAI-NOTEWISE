@@ -9,7 +9,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "NoteWise - AI Learning Assistant",
   description: "Transform your lectures into smart notes with AI",
-  generator: "v0.dev",
+  icons: {
+    icon: "/logo.jpg",
+  },
 };
 
 export default function RootLayout({

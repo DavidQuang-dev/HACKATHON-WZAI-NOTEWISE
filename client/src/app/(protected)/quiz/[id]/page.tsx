@@ -1,53 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import {
-  Lightbulb,
-  Check,
-  X,
-  ArrowLeft,
-  BookOpen,
-  GraduationCap,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Lightbulb, Check, X, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
-const questions = [
-  {
-    question: "What is the main topic of this chapter?",
-    options: [
-      "Introduction to Calculus",
-      "Limits and Continuity",
-      "Derivatives and Applications",
-      "Integrals and Techniques",
-    ],
-    correct: 0,
-    hint: "Think about what the chapter title suggests",
-  },
-];
+import { useQuizStore } from "@/store/quizStore";
+import { useNoteLogic } from "@/hooks/use-quiz";
+import { useChatStore } from "@/store/chatStore";
 
 export default function QuizPage() {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [showHint, setShowHint] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [score, setScore] = useState(8);
-  const [totalQuestions] = useState(10);
+  const {
+    // State
+    selectedAnswer,
+    showHint,
+    isComplete,
+    quizTitle,
 
-  const handleSubmit = () => {
-    setIsComplete(true);
-  };
+    // Actions
+    setSelectedAnswer,
+    toggleHint,
+    submitAnswer,
+    retakeQuiz,
+
+    // Getters
+    getCurrentQuestion,
+    getProgress,
+    getScorePercentage,
+    getTotalQuestions,
+    getCorrectAnswers,
+    getIncorrectAnswers,
+  } = useQuizStore();
+
+  const { currentNoteId } = useChatStore();
+
+  const currentQuestion = getCurrentQuestion();
+  const progress = getProgress();
+  const percentage = getScorePercentage();
+  const totalQuestions = getTotalQuestions();
+  const correctAnswers = getCorrectAnswers();
+  const incorrectAnswers = getIncorrectAnswers();
 
   if (isComplete) {
-    const percentage = Math.round((score / totalQuestions) * 100);
-    const correctAnswers = score;
-    const incorrectAnswers = totalQuestions - score;
-
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
         {/* Quiz Results Content */}
@@ -58,9 +55,7 @@ export default function QuizPage() {
                 <CardTitle className="text-3xl font-bold text-gray-900">
                   Quiz Results
                 </CardTitle>
-                <p className="text-gray-600 mt-2">
-                  Lecture 1: Introduction to Psychology
-                </p>
+                <p className="text-gray-600 mt-2">{quizTitle}</p>
               </CardHeader>
               <CardContent className="text-center space-y-8 pb-8">
                 <div className="text-8xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
@@ -104,7 +99,7 @@ export default function QuizPage() {
                           <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
                             Correct: {String.fromCharCode(65 + (i % 4))}
                           </span>
-                          {i < score ? (
+                          {i < correctAnswers ? (
                             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                               <Check className="h-5 w-5 text-green-600" />
                             </div>
@@ -122,11 +117,12 @@ export default function QuizPage() {
                 <div className="flex gap-4 justify-center">
                   <Button
                     variant="outline"
+                    onClick={retakeQuiz}
                     className="h-12 px-8 bg-transparent border-gray-200 hover:bg-gray-50"
                   >
                     Retake Quiz
                   </Button>
-                  <Link href="/notes/lecture-1">
+                  <Link href={`/notes/${currentNoteId}`}>
                     <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300">
                       Back to Notes
                     </Button>
@@ -140,14 +136,45 @@ export default function QuizPage() {
     );
   }
 
+  if (!currentQuestion) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Quiz Content */}
       <main className="p-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <div className="flex items-center justify-between mb-8">
+            <Link href="/notes/lecture-1">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 h-10 px-4 bg-transparent border-gray-200 hover:bg-gray-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Notes
+              </Button>
+            </Link>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Progress</span>
+              <Progress
+                value={progress}
+                className="w-32"
+                style={{
+                  background: "#2563eb", // from-blue-600 to-blue-700
+                  height: "8px",
+                  borderRadius: "9999px",
+                }}
+              />
+              <span className="text-sm font-medium text-gray-900">
+                {Math.round(progress)}%
+              </span>
+            </div>
+          </div>
+
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Lecture 1: Introduction to Psychology
+              {quizTitle}
             </h1>
             <p className="text-gray-600 text-lg">Multiple Choice Questions</p>
             <p className="text-sm text-gray-500 mt-1">
@@ -155,20 +182,10 @@ export default function QuizPage() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            <Progress
-              value={((currentQuestion + 1) / questions.length) * 100}
-              className="w-full h-3 bg-gray-200"
-            />
-            <p className="text-sm text-gray-600 font-medium">
-              Question {currentQuestion + 1} of {questions.length}
-            </p>
-          </div>
-
           <Card className="border-0 shadow-xl shadow-gray-200/50 bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-2xl text-gray-900">
-                {questions[currentQuestion].question}
+                {currentQuestion.question}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -176,10 +193,11 @@ export default function QuizPage() {
                 value={selectedAnswer}
                 onValueChange={setSelectedAnswer}
               >
-                {questions[currentQuestion].options.map((option, index) => (
+                {currentQuestion.options.map((option, index) => (
                   <div
                     key={index}
                     className="flex items-center space-x-4 p-4 rounded-xl hover:bg-blue-50/50 transition-colors cursor-pointer"
+                    onClick={() => setSelectedAnswer(index.toString())}
                   >
                     <RadioGroupItem
                       value={index.toString()}
@@ -203,11 +221,11 @@ export default function QuizPage() {
                       <Lightbulb className="h-5 w-5" />
                     </div>
                     <span className="font-semibold">
-                      Hint for question: What is the main topic of this chapter?
+                      Hint for question: {currentQuestion.question}
                     </span>
                   </div>
                   <p className="text-yellow-700 font-medium">
-                    {questions[currentQuestion].hint}
+                    {currentQuestion.hint}
                   </p>
                 </div>
               )}
@@ -215,14 +233,14 @@ export default function QuizPage() {
               <div className="flex gap-4 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setShowHint(!showHint)}
+                  onClick={toggleHint}
                   className="flex items-center gap-2 h-12 px-6 bg-transparent border-gray-200 hover:bg-yellow-50 hover:border-yellow-300"
                 >
                   <Lightbulb className="h-4 w-4" />
                   {showHint ? "Hide Hint" : "Show Hint"}
                 </Button>
                 <Button
-                  onClick={handleSubmit}
+                  onClick={submitAnswer}
                   disabled={!selectedAnswer}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                 >
