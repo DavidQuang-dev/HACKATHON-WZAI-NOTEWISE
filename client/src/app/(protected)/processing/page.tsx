@@ -121,13 +121,17 @@ export default function ProcessingPage() {
             setIsWaitingForData(false);
 
             // Extract and store note ID for navigation
-            const id = parsed?.data?.summary?.id || parsed?.summary?.id;
+            const id = parsed?.data?.noteId || parsed?.noteId;
             if (id) {
               setNoteId(id);
               localStorage.setItem("currentNoteId", id);
               console.log("Note ID saved:", id);
             } else {
               console.log("No note ID found in data");
+              console.log(
+                "Available data keys:",
+                Object.keys(parsed?.data || {})
+              );
             }
 
             // Clean up localStorage flags
@@ -576,7 +580,7 @@ export default function ProcessingPage() {
                     </p>
                     <Link href={noteId ? `/notes/${noteId}` : "/notes"}>
                       <Button size="lg" variant="secondary">
-                        View Your Notes
+                        View Your Note
                       </Button>
                     </Link>
                   </CardContent>
