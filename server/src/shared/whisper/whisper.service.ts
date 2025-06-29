@@ -16,25 +16,46 @@ export class WhisperService {
 
   async transcribeAudio(file: Express.Multer.File): Promise<string> {
     try {
-      this.logger.log(`Transcribing audio file: ${file.filename}`);
+      this.logger.log(`Transcribing file: ${file.originalname}, size: ${file.size}, mimetype: ${file.mimetype}`);
+
+      // Kiểm tra file tồn tại
+      if (!file.path || !fs.existsSync(file.path)) {
+        throw new Error(`File not found at path: ${file.path}`);
+      }
 
       const fileStream = fs.createReadStream(file.path);
 
       const response = await this.openai.audio.transcriptions.create({
         file: fileStream,
         model: this.sttModel,
-        });
+        language: 'vi', // Tiếng Việt - có thể config thành dynamic
+        response_format: 'text',
+      });
 
-      this.logger.log('Audio transcription completed successfully');
-      return response.text;
+      if (!response || !response.trim()) {
+        throw new Error('Transcription returned empty result');
+      }
+
+      this.logger.log(`Transcription completed successfully. Length: ${response.length} characters`);
+      return response.trim();
     } catch (error) {
-      this.logger.error('Error during audio transcription:', error);
+      this.logger.error('Error during audio transcription:', {
+        message: error.message,
+        fileName: file?.originalname,
+        filePath: file?.path,
+        fileSize: file?.size,
+        stack: error.stack
+      });
       throw new Error(`Failed to transcribe audio: ${error.message}`);
     } finally {
       // Cleanup: Xóa file tạm sau khi xử lý
-      if (fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-        this.logger.log(`Temporary file deleted: ${file.path}`);
+      if (file?.path && fs.existsSync(file.path)) {
+        try {
+          fs.unlinkSync(file.path);
+          this.logger.log(`Temporary file deleted: ${file.path}`);
+        } catch (cleanupError) {
+          this.logger.warn(`Failed to delete temporary file: ${cleanupError.message}`);
+        }
       }
     }
   }

@@ -16,13 +16,18 @@ export const FILE_UPLOAD_CONFIG = {
     'audio/aac',      // AAC
   ],
 
+  // Video files (chỉ MP4)
+  VIDEO: [
+    'video/mp4',      // MP4
+  ],
+
   // Size limits (bytes)
   MAX_FILE_SIZE: 25 * 1024 * 1024, // 25MB (tăng cho file âm thanh)
   MAX_FILENAME_LENGTH: 100,
 
   // Get all allowed types
   getAllowedTypes(): string[] {
-    return [...this.DOCUMENTS, ...this.AUDIO];
+    return [...this.DOCUMENTS, ...this.AUDIO, ...this.VIDEO];
   },
 
   // Get file extensions mapping
@@ -37,6 +42,7 @@ export const FILE_UPLOAD_CONFIG = {
       'audio/mp3': 'MP3',
       'audio/wav': 'WAV',
       'audio/aac': 'AAC',
+      'video/mp4': 'MP4',
     };
   },
 };
