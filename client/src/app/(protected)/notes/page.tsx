@@ -25,7 +25,6 @@ import { useNotesStore } from "@/store/notesStore";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShareDialog } from "@/components/share-dialog";
-import { shareNote } from "@/services/notes.api";
 import { toast } from "sonner";
 import { Note } from "@/types/notes";
 

@@ -5,13 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  shareNote,
   getNoteById,
-  getSharedNoteById,
 } from "@/services/notes.api";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
-import { Loader2, FileText, User, ArrowLeft, Lock } from "lucide-react";
+import { Loader2, FileText, ArrowLeft, Lock } from "lucide-react";
 
 export default function PublicSharedNotePage() {
   const params = useParams();
@@ -22,7 +20,7 @@ export default function PublicSharedNotePage() {
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const [, setIsVerified] = useState(false);
   const [noteData, setNoteData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 

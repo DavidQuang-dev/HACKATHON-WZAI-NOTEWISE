@@ -26,7 +26,7 @@ export default function SharedNotePage() {
   const setNote = useNotesStore((state) => state.setNote);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const [, setIsVerified] = useState(false);
   const [noteData, setNoteData] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,7 +50,7 @@ export default function SharedNotePage() {
       setIsLoading(true);
 
       // First, try to get the note from the store
-      let note = findNoteInStore(noteId);
+      const note = findNoteInStore(noteId);
 
       if (note) {
         // Note found in store, use it directly

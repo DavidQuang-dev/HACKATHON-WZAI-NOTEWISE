@@ -31,7 +31,7 @@ interface ProcessingStep {
 }
 
 export default function ProcessingPage() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [, setCurrentStep] = useState(0);
   const [transcriptText, setTranscriptText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [processedData, setProcessedData] = useState<any>(null);
@@ -368,7 +368,7 @@ export default function ProcessingPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {steps.map((step, index) => (
+                    {steps.map((step) => (
                       <div
                         key={step.id}
                         className="flex items-center space-x-4"

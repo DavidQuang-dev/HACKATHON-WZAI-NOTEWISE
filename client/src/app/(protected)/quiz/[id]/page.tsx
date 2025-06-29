@@ -47,7 +47,6 @@ export default function QuizPage() {
   const { fetchQuizById } = useNoteLogic();
 
   const currentQuestion = getCurrentQuestion();
-  const progress = getProgress();
   const percentage = getScorePercentage();
   const totalQuestions = getTotalQuestions();
   const correctAnswers = getCorrectAnswers();

@@ -15,15 +15,10 @@ import {
   Square,
   Pause,
   Play,
-  Settings,
   Volume2,
-  Clock,
-  FileAudio,
   Lightbulb,
   CheckCircle,
-  ArrowLeft,
 } from "lucide-react";
-import Link from "next/link";
 import { MainLayout } from "@/components/main-layout";
 import { uploadFile } from "@/services/upload.api";
 import { toast } from "sonner";
@@ -39,7 +34,7 @@ export default function RecordPage() {
   );
   const audioChunks = useRef<Blob[]>([]);
   const audioStream = useRef<MediaStream | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [, setAudioUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 

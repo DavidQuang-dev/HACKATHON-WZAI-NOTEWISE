@@ -1,10 +1,7 @@
 import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { uploadFile, deleteFile } from "@/services/upload.api";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent } from "./ui/dialog";
-import { File as FileIcon, Trash2, Eye } from "lucide-react";
+import { File as FileIcon, Trash2 } from "lucide-react";
 
 interface FileUploadProps {
   value?: string;
@@ -19,17 +16,14 @@ interface FileUploadProps {
 }
 
 export const FileUpload = ({
-  value,
   onChange,
   label,
-  resetOnDelete,
   accept = "*",
   selectedFile,
   onFileSelect,
-  onUpload,
   isProcessed = false,
 }: FileUploadProps) => {
-  const [uploading, setUploading] = useState(false);
+  const [uploading, ] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,31 +31,8 @@ export const FileUpload = ({
     onFileSelect(file || null);
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile || !onUpload) return;
-    setUploading(true);
-    try {
-      await onUpload();
-    } catch (error) {
-      console.error("Upload failed:", error);
-    } finally {
-      setUploading(false);
-    }
-  };
 
-  const handleDeleteFile = async () => {
-    if (!value) return;
-    setUploading(true);
-    try {
-      await deleteFile(value);
-      if (resetOnDelete) onChange("");
-      toast.success("Xóa file thành công!");
-    } catch {
-      toast.error("Xóa file thất bại");
-    } finally {
-      setUploading(false);
-    }
-  };
+
 
   return (
     <div className="w-full h-full">

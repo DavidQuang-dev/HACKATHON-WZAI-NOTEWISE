@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { Upload, FileAudio, FileText, Sparkles } from "lucide-react";
+import { FileAudio, FileText, Sparkles } from "lucide-react";
 import { MainLayout } from "@/components/main-layout";
-import Link from "next/link";
 import { FileUpload } from "@/components/upload";
 import { uploadFile, uploadText } from "@/services/upload.api";
 import { toast } from "sonner";
@@ -16,7 +14,6 @@ import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(75);
   const [textContent, setTextContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [processedData, setProcessedData] = useState<any>(null);
