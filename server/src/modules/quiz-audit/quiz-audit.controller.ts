@@ -17,6 +17,6 @@ export class QuizAuditController {
     @ApiResponse({ status: 400, description: 'Bad request' })
     create(@Body() createQuizAuditDto: CreateQuizAuditDto, @Request() req) {
         const user = req.user;
-        return this.quizAuditService.create(createQuizAuditDto as any, [], user.id);
+        return this.quizAuditService.createQuiz(createQuizAuditDto as any, user.id);
     }
 }
