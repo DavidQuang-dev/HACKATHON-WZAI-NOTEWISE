@@ -34,6 +34,7 @@ export default function ProcessingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [transcriptText, setTranscriptText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [processedData, setProcessedData] = useState<any>(null);
 
   const [steps, setSteps] = useState<ProcessingStep[]>([
     {
@@ -66,45 +67,95 @@ export default function ProcessingPage() {
     },
   ]);
 
-  // Simulate real-time transcription
-  const sampleTranscript = `Welcome to today's lecture on Introduction to Machine Learning. Machine Learning is a fascinating field that's a subset of Artificial Intelligence, focusing on algorithms that can learn and make decisions from data.
+  //   // Simulate real-time transcription
+  //   const sampleTranscript = `Welcome to today's lecture on Introduction to Machine Learning. Machine Learning is a fascinating field that's a subset of Artificial Intelligence, focusing on algorithms that can learn and make decisions from data.
 
-There are three main types of machine learning approaches. First, we have Supervised Learning, where we train our models using labeled data - essentially showing the algorithm examples of inputs and their correct outputs. This is like teaching a student with a textbook that has all the answers.
+  // There are three main types of machine learning approaches. First, we have Supervised Learning, where we train our models using labeled data - essentially showing the algorithm examples of inputs and their correct outputs. This is like teaching a student with a textbook that has all the answers.
 
-Second, there's Unsupervised Learning, where we give the algorithm data without labels and ask it to find patterns or structures on its own. Think of this as giving someone a puzzle without showing them the final picture.
+  // Second, there's Unsupervised Learning, where we give the algorithm data without labels and ask it to find patterns or structures on its own. Think of this as giving someone a puzzle without showing them the final picture.
 
-Finally, we have Reinforcement Learning, where an agent learns through trial and error by receiving rewards or penalties for its actions. This is similar to how we might train a pet with treats and corrections.
+  // Finally, we have Reinforcement Learning, where an agent learns through trial and error by receiving rewards or penalties for its actions. This is similar to how we might train a pet with treats and corrections.
 
-Some common supervised learning algorithms include Linear Regression for predicting continuous values, Decision Trees for classification problems, and Neural Networks which can handle complex patterns in data.
+  // Some common supervised learning algorithms include Linear Regression for predicting continuous values, Decision Trees for classification problems, and Neural Networks which can handle complex patterns in data.
 
-Data preprocessing is absolutely crucial for good model performance. This includes cleaning the data, handling missing values, and scaling features appropriately.
+  // Data preprocessing is absolutely crucial for good model performance. This includes cleaning the data, handling missing values, and scaling features appropriately.
 
-One important concept to understand is overfitting. This occurs when our model becomes too complex and essentially memorizes the training data rather than learning generalizable patterns. To combat this, we use techniques like cross-validation to assess how well our model will perform on new, unseen data.`;
+  // One important concept to understand is overfitting. This occurs when our model becomes too complex and essentially memorizes the training data rather than learning generalizable patterns. To combat this, we use techniques like cross-validation to assess how well our model will perform on new, unseen data.`;
 
   useEffect(() => {
-    const processSteps = async () => {
-      // Step 1: Transcription (already completed - upload)
+    // Get processed data from localStorage
+    const storedData = localStorage.getItem("processedData");
+    console.log("Raw stored data:", storedData);
 
-      // Step 2: Speech to Text
-      await simulateTranscription();
-
-      // Step 3: Content Analysis
-      await simulateAnalysis();
-
-      // Step 4: Notes Generation
-      await simulateGeneration();
-
-      setIsComplete(true);
-    };
-
-    processSteps();
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        console.log("Parsed processed data:", parsed);
+        setProcessedData(parsed);
+      } catch (error) {
+        console.error("Error parsing stored data:", error);
+      }
+    }
   }, []);
+
+  // Separate useEffect to start processing when processedData is ready
+  useEffect(() => {
+    if (processedData !== null) {
+      const processSteps = async () => {
+        // Step 1: Transcription (already completed - upload)
+
+        // Step 2: Speech to Text
+        await simulateTranscription();
+
+        // Step 3: Content Analysis
+        await simulateAnalysis();
+
+        // Step 4: Notes Generation
+        await simulateGeneration();
+
+        setIsComplete(true);
+      };
+
+      processSteps();
+    }
+  }, [processedData]); // Trigger when processedData changes
 
   const simulateTranscription = () => {
     return new Promise<void>((resolve) => {
       let progress = 0;
       let textIndex = 0;
-      const words = sampleTranscript.split(" ");
+
+      console.log(
+        "Current processedData in simulateTranscription:",
+        processedData
+      );
+
+      // Use real transcript data if available, with proper fallback
+      let fullText = "Không có dữ liệu transcript"; // Default text
+
+      if (processedData?.data?.fullTranscription?.description_vi) {
+        fullText = processedData.data.fullTranscription.description_vi;
+        console.log("Using data.fullTranscription.description_vi");
+      } else if (processedData?.fullTranscription?.description_vi) {
+        fullText = processedData.fullTranscription.description_vi;
+        console.log("Using fullTranscription.description_vi");
+      } else {
+        console.log("No transcript data found, using default text");
+        console.log(
+          "Available keys in processedData:",
+          processedData ? Object.keys(processedData) : "processedData is null"
+        );
+        if (processedData?.data) {
+          console.log(
+            "Available keys in processedData.data:",
+            Object.keys(processedData.data)
+          );
+        }
+      }
+
+      console.log("Final fullText:", fullText.substring(0, 100) + "...");
+
+      const words = fullText.split(" ");
 
       const interval = setInterval(() => {
         progress += 2;
@@ -130,7 +181,7 @@ One important concept to understand is overfitting. This occurs when our model b
 
         if (progress >= 100) {
           clearInterval(interval);
-          setTranscriptText(sampleTranscript);
+          setTranscriptText(fullText);
           setCurrentStep(2);
           resolve();
         }
@@ -352,43 +403,50 @@ One important concept to understand is overfitting. This occurs when our model b
                           Topic Detected
                         </h4>
                         <p className="text-sm text-blue-700">
-                          Introduction to Machine Learning
+                          {processedData?.data?.summary?.name_vi ||
+                            processedData?.summary?.name_vi ||
+                            "Đang phân tích chủ đề..."}
                         </p>
                       </div>
 
                       <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                         <h4 className="font-medium text-green-900 mb-1">
-                          Key Concepts Found
+                          Summary Analysis
                         </h4>
-                        <div className="flex flex-wrap gap-1">
-                          <Badge variant="secondary" className="text-xs">
-                            Supervised Learning
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            Unsupervised Learning
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            Overfitting
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            Neural Networks
-                          </Badge>
-                        </div>
+                        <p className="text-sm text-green-700">
+                          {processedData?.data?.summary?.description_vi ||
+                            processedData?.summary?.description_vi ||
+                            "Đang tạo tóm tắt..."}
+                        </p>
                       </div>
 
-                      {steps[2].status === "completed" && (
-                        <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                          <h4 className="font-medium text-purple-900 mb-1">
-                            Structure Analysis
-                          </h4>
-                          <ul className="text-sm text-purple-700 space-y-1">
-                            <li>• 7 main concepts identified</li>
-                            <li>• 3 learning types explained</li>
-                            <li>• 4 algorithms mentioned</li>
-                            <li>• Ready for note generation</li>
-                          </ul>
-                        </div>
-                      )}
+                      {steps[2].status === "completed" &&
+                        (processedData?.data?.quiz || processedData?.quiz) && (
+                          <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <h4 className="font-medium text-purple-900 mb-1">
+                              Quiz Preparation
+                            </h4>
+                            <ul className="text-sm text-purple-700 space-y-1">
+                              <li>
+                                •{" "}
+                                {(
+                                  processedData?.data?.quiz ||
+                                  processedData?.quiz
+                                )?.totalQuestion || 0}{" "}
+                                câu hỏi được tạo
+                              </li>
+                              <li>
+                                • Thời gian ước tính:{" "}
+                                {(
+                                  processedData?.data?.quiz ||
+                                  processedData?.quiz
+                                )?.estimatedTime || 0}{" "}
+                                phút
+                              </li>
+                              <li>• Đã sẵn sàng tạo ghi chú</li>
+                            </ul>
+                          </div>
+                        )}
                     </div>
                   )}
 
@@ -423,8 +481,16 @@ One important concept to understand is overfitting. This occurs when our model b
                   Processing Complete!
                 </h3>
                 <p className="text-lg opacity-90 mb-4">
-                  Your lecture has been successfully converted into smart notes
-                  with key points, summaries, and practice questions.
+                  {processedData?.data?.summary?.name_vi ||
+                  processedData?.summary?.name_vi
+                    ? `"${
+                        processedData?.data?.summary?.name_vi ||
+                        processedData?.summary?.name_vi
+                      }" đã được xử lý thành công với ghi chú thông minh, tóm tắt và ${
+                        (processedData?.data?.quiz || processedData?.quiz)
+                          ?.totalQuestion || 0
+                      } câu hỏi thực hành.`
+                    : "Your content has been successfully converted into smart notes with key points, summaries, and practice questions."}
                 </p>
                 <Link href="/notes">
                   <Button size="lg" variant="secondary">
