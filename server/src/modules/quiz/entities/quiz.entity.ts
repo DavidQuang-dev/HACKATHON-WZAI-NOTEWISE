@@ -1,8 +1,7 @@
 import { AbstractEntity } from "src/common/base/entities/base.entity";
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { Question } from '../../question/entities/question.entity';
-import { Note } from '../../note/entities/note.entity';
 
 @Entity('quiz')
 export class Quiz extends AbstractEntity {
@@ -54,14 +53,6 @@ export class Quiz extends AbstractEntity {
     })
     @Column({ type: 'int', default: 0 })
     estimatedTime: number;
-
-    @ApiProperty({
-        description: 'Note that uses this summarized transcript',
-        type: () => Note,
-        required: false
-    })
-    @OneToOne(() => Note, (note) => note.summarizedTranscript)
-    note?: Note;
 
     @ApiProperty({
         description: 'Questions belonging to this quiz',

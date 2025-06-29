@@ -22,14 +22,16 @@ export class QuizAudit extends AbstractEntity {
     isDone: boolean;
 
     @ApiProperty({
-        description: 'Account entity relationship'
+        description: 'Account entity relationship',
+        type: () => Account
     })
     @ManyToOne(() => Account, { eager: true })
     @JoinColumn({ name: 'accountId' })
     account: Account;
 
     @ApiProperty({
-        description: 'Quiz entity relationship'
+        description: 'Quiz entity relationship',
+        type: () => Quiz
     })
     @ManyToOne(() => Quiz, { eager: true })
     @JoinColumn({ name: 'quizId' })

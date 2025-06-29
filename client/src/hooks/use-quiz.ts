@@ -1,9 +1,10 @@
-import { getNoteById } from "@/services/notes.api";
+import { getQuizById } from "@/services/quiz.api";
+
 
 export function useNoteLogic() {
-  const fetchNoteById = async (id: string) => {
+  const fetchQuizById = async (id: string) => {
     try {
-      const data = await getNoteById(id);
+      const data = await getQuizById(id);
       return data.data;
     } catch (err) {
       console.error("Fetch note by ID failed", err);
@@ -12,6 +13,6 @@ export function useNoteLogic() {
   };
 
   return {
-    fetchNoteById,
+    fetchQuizById,
   };
 }
