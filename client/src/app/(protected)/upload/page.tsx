@@ -36,7 +36,7 @@ export default function UploadPage() {
       // Store in localStorage for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
 
-      toast.success("Xử lý file thành công!");
+      toast.success("File processed successfully!");
 
       // Automatically navigate to processing page after successful upload
       setTimeout(() => {
@@ -44,7 +44,7 @@ export default function UploadPage() {
       }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Tải file lên thất bại");
+      toast.error("File upload failed");
       throw error;
     } finally {
       setIsUploading(false);
@@ -71,7 +71,7 @@ export default function UploadPage() {
       // Store in localStorage for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
 
-      toast.success("Xử lý text thành công!");
+      toast.success("Text processed successfully!");
 
       // Automatically navigate to processing page after successful upload
       setTimeout(() => {
@@ -79,7 +79,7 @@ export default function UploadPage() {
       }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Text upload error:", error);
-      toast.error("Xử lý text thất bại");
+      toast.error("Text processing failed");
       throw error;
     } finally {
       setIsUploading(false);
@@ -109,7 +109,7 @@ export default function UploadPage() {
         return;
       }
     } else {
-      toast.error("Vui lòng chọn file hoặc nhập nội dung");
+      toast.error("Please select a file or enter content");
     }
   };
 

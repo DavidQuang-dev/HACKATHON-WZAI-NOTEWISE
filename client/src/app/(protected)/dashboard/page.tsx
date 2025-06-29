@@ -41,11 +41,11 @@ export default function DashboardPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const handleShare = (note: any) => {
-    // Tạo link chia sẻ trỏ đến route protected shared
+    // Create share link pointing to protected shared route
     const url = `${window.location.origin}/shared/${note.id}`;
     setShareUrl(url);
     setShareOpen(true);
-    toast.success("Liên kết chia sẻ đã được tạo!");
+    toast.success("Share link has been created!");
   };
 
   return (
@@ -197,14 +197,16 @@ export default function DashboardPage() {
                           </TableCell>
                           <TableCell className="text-gray-600 font-medium w-1/5 text-center">
                             {note.created_at
-                              ? new Date(note.created_at).toLocaleDateString(
-                                  "en-US",
-                                  {
+                              ? new Date(note.created_at)
+                                  .toLocaleString("en-VN", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    day: "2-digit",
+                                    month: "2-digit",
                                     year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  }
-                                )
+                                    timeZone: "Asia/Ho_Chi_Minh",
+                                  })
+                                  .replace(",", "")
                               : "N/A"}
                           </TableCell>
                           <TableCell className="text-gray-600 w-2/5">

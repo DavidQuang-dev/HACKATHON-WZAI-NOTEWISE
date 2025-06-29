@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { shareNote, getNoteById, getSharedNoteById } from "@/services/notes.api";
+import {
+  shareNote,
+  getNoteById,
+  getSharedNoteById,
+} from "@/services/notes.api";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
 import { Loader2, FileText, User, ArrowLeft, Lock } from "lucide-react";
@@ -22,7 +26,7 @@ export default function PublicSharedNotePage() {
   const [noteData, setNoteData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Tự động xác thực khi user đã đăng nhập
+  // Auto verify when user is logged in
   useEffect(() => {
     if (hasHydrated && user?.email) {
       handleAutoVerify();
@@ -36,17 +40,17 @@ export default function PublicSharedNotePage() {
       setIsSubmitting(true);
       setIsLoading(true);
 
-      // Chỉ cần lấy dữ liệu ghi chú, không cần gọi shareNote API
-      // vì link đã được tạo và chia sẻ rồi
+      // Only fetch note data, no need to call shareNote API
+      // because the link has already been created and shared
       const note = await getNoteById(noteId);
       setNoteData(note);
       setIsVerified(true);
 
-      toast.success("Đã tải ghi chú thành công!");
+      toast.success("Note loaded successfully!");
     } catch (error) {
       console.error("Load note error:", error);
       toast.error(
-        "Không thể tải ghi chú này. Link có thể đã hết hạn hoặc bị xóa."
+        "Unable to load this note. The link may have expired or been deleted."
       );
     } finally {
       setIsSubmitting(false);
@@ -59,19 +63,19 @@ export default function PublicSharedNotePage() {
     setNoteData(null);
   };
 
-  // Hiển thị loading trong khi đang hydrate
+  // Show loading while hydrating
   if (!hasHydrated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Đang tải...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Hiển thị yêu cầu đăng nhập nếu chưa đăng nhập
+  // Show login required if not logged in
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
@@ -82,10 +86,10 @@ export default function PublicSharedNotePage() {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-gray-900">
-                Yêu cầu đăng nhập
+                Login required
               </CardTitle>
               <p className="text-gray-600 mt-2">
-                Bạn cần đăng nhập để xem ghi chú được chia sẻ này
+                You need to log in to view this shared note
               </p>
             </div>
           </CardHeader>
@@ -95,13 +99,13 @@ export default function PublicSharedNotePage() {
               onClick={() => router.push("/auth")}
               className="w-full h-12"
             >
-              Đăng nhập
+              Log in
             </Button>
 
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Lưu ý:</strong> Bạn cần có tài khoản và đăng nhập vào hệ
-                thống để có thể xem nội dung ghi chú được chia sẻ.
+                <strong>Note:</strong> You need to have an account and be logged
+                in to view the content of the shared note.
               </p>
             </div>
           </CardContent>
@@ -110,13 +114,13 @@ export default function PublicSharedNotePage() {
     );
   }
 
-  // Hiển thị loading khi đang xác thực hoặc tải dữ liệu
+  // Show loading when verifying or fetching data
   if (isSubmitting || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Đang tải ghi chú...</p>
+          <p className="text-gray-600">Loading note...</p>
         </div>
       </div>
     );
@@ -128,7 +132,7 @@ export default function PublicSharedNotePage() {
         <div className="mb-4">
           <Button variant="ghost" onClick={handleGoBack} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Quay lại
+            Back
           </Button>
         </div>
 
@@ -137,27 +141,27 @@ export default function PublicSharedNotePage() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
-                  {noteData?.name_vi || "Ghi chú được chia sẻ"}
+                  {noteData?.name_vi || "Shared Note"}
                 </CardTitle>
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   <span>
-                    Ngày tạo:{" "}
+                    Created at:{" "}
                     {noteData?.created_at
                       ? new Date(noteData.created_at).toLocaleDateString(
-                          "vi-VN",
+                          "en-US",
                           {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
                           }
                         )
-                      : "Không rõ"}
+                      : "Unknown"}
                   </span>
                 </div>
               </div>
               <div className="text-sm text-gray-500 bg-green-100 px-3 py-1 rounded-full flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Đã xác thực
+                Verified
               </div>
             </div>
           </CardHeader>
@@ -165,7 +169,9 @@ export default function PublicSharedNotePage() {
           <CardContent className="space-y-6">
             {noteData?.description_vi && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-2">Mô tả:</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Description:
+                </h3>
                 <p className="text-gray-700 leading-relaxed">
                   {noteData.description_vi}
                 </p>
@@ -181,18 +187,18 @@ export default function PublicSharedNotePage() {
               ) : (
                 <div className="bg-white p-6 rounded-lg border text-center text-gray-500">
                   <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>Nội dung ghi chú sẽ được hiển thị tại đây</p>
+                  <p>The note content will be displayed here</p>
                 </div>
               )}
             </div>
 
             <div className="bg-blue-50 p-4 rounded-lg text-center">
               <p className="text-sm text-blue-800">
-                Ghi chú này được chia sẻ từ <strong>NoteWise</strong> - Nền tảng
-                quản lý ghi chú thông minh
+                This note is shared from <strong>NoteWise</strong> - Smart note
+                management platform
               </p>
               <p className="text-xs text-blue-600 mt-1">
-                Truy cập bởi: {user?.email || "Người dùng"}
+                Accessed by: {user?.email || "User"}
               </p>
             </div>
           </CardContent>

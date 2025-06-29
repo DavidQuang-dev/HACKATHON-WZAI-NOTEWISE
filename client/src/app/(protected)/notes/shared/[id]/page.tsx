@@ -23,24 +23,24 @@ export default function SharedNotePage() {
     e.preventDefault();
 
     if (!email.trim()) {
-      toast.error("Vui lòng nhập email của bạn");
+      toast.error("Please enter your email");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      // Gọi API để xác thực email và lấy quyền truy cập ghi chú
+      // Call API to authenticate email and get note access
       await shareNote(noteId, email);
       setIsVerified(true);
 
-      // Sau khi xác thực thành công, lấy dữ liệu ghi chú
+      // After successful authentication, get note data
       setIsLoading(true);
       const note = await getNoteById(noteId);
       setNoteData(note);
 
-      toast.success("Xác thực thành công! Đang tải ghi chú...");
+      toast.success("Authentication successful! Loading note...");
     } catch (error) {
-      toast.error("Không thể xác thực email. Vui lòng kiểm tra lại.");
+      toast.error("Unable to authenticate email. Please check and try again.");
     } finally {
       setIsSubmitting(false);
       setIsLoading(false);
@@ -57,10 +57,10 @@ export default function SharedNotePage() {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-gray-900">
-                Truy cập ghi chú chia sẻ
+                Access Shared Note
               </CardTitle>
               <p className="text-gray-600 mt-2">
-                Vui lòng nhập email của bạn để xem nội dung ghi chú này
+                Please enter your email to view this note content
               </p>
             </div>
           </CardHeader>
@@ -70,11 +70,11 @@ export default function SharedNotePage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Email của bạn
+                  Your Email
                 </label>
                 <Input
                   type="email"
-                  placeholder="Nhập địa chỉ email..."
+                  placeholder="Enter your email address..."
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-12"
@@ -90,19 +90,19 @@ export default function SharedNotePage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Đang xác thực...
+                    Authenticating...
                   </>
                 ) : (
-                  "Truy cập ghi chú"
+                  "Access Note"
                 )}
               </Button>
             </form>
 
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Lưu ý:</strong> Email của bạn sẽ được sử dụng để xác
-                thực quyền truy cập ghi chú này. Thông tin email sẽ được bảo mật
-                và không được chia sẻ.
+                <strong>Note:</strong> Your email will be used to authenticate
+                access to this note. Email information will be kept secure and
+                will not be shared.
               </p>
             </div>
           </CardContent>
@@ -116,7 +116,7 @@ export default function SharedNotePage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Đang tải ghi chú...</p>
+          <p className="text-gray-600">Loading note...</p>
         </div>
       </div>
     );
@@ -130,17 +130,17 @@ export default function SharedNotePage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl font-bold text-gray-900">
-                  {noteData?.name_vi || "Ghi chú được chia sẻ"}
+                  {noteData?.name_vi || "Shared Note"}
                 </CardTitle>
                 <p className="text-gray-600 mt-1">
-                  Được chia sẻ vào{" "}
+                  Shared on{" "}
                   {noteData?.created_at
-                    ? new Date(noteData.created_at).toLocaleDateString("vi-VN")
+                    ? new Date(noteData.created_at).toLocaleDateString("en-US")
                     : ""}
                 </p>
               </div>
               <div className="text-sm text-gray-500 bg-green-100 px-3 py-1 rounded-full">
-                Đã xác thực: {email}
+                Authenticated: {email}
               </div>
             </div>
           </CardHeader>
@@ -148,16 +148,18 @@ export default function SharedNotePage() {
           <CardContent className="space-y-6">
             {noteData?.description_vi && (
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Mô tả:</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Description:
+                </h3>
                 <p className="text-gray-700 leading-relaxed">
                   {noteData.description_vi}
                 </p>
               </div>
             )}
 
-            {/* Hiển thị nội dung ghi chú khác nếu có */}
+            {/* Display other note content if available */}
             <div className="prose max-w-none">
-              {/* Có thể hiển thị markdown content hoặc các thông tin khác từ noteData */}
+              {/* Can display markdown content or other information from noteData */}
               {noteData?.content && (
                 <div dangerouslySetInnerHTML={{ __html: noteData.content }} />
               )}
