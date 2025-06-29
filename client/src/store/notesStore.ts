@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { getAllNotes } from "@/services/notes.api";
-import { Note, NotesPagination, GetNotesParams } from "@/types/notes";
+import { Note} from "@/types/notes";
 
 interface NotesState {
   // State

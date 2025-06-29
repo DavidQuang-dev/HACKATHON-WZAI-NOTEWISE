@@ -1,39 +1,22 @@
 "use client";
 
-import {
-  BookOpen,
-  GraduationCap,
-  Menu,
-  Search,
-  Settings,
-  X,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+
+import { useParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Card, CardContent } from "./ui/card";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 import { NoteSidebar } from "./note-sidebar";
 import { useChatStore } from "@/store/chatStore";
 import { useNoteLogic } from "@/hooks/use-note";
 import { useNotesStore } from "@/store/notesStore";
 import { MainLayout } from "./main-layout";
 
-const navItems = [
-  { title: "Home", url: "/dashboard" },
-  { title: "Notes", url: "/notes" },
-  { title: "Record", url: "/record" },
-  { title: "Upload", url: "/upload" },
-];
+
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function NoteLayout({ children }: MainLayoutProps) {
-  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { setCurrentNoteId } = useChatStore();
   const { fetchNoteById } = useNoteLogic();

@@ -18,7 +18,7 @@ export default function SummaryPage() {
             Summarized Notes
           </h3>
           <p className="text-gray-600 text-sm lg:text-base">
-            Essential takeaways from today's lecture
+            Essential takeaways from today&apos;s lecture
           </p>
         </div>
         <Card className="bg-gradient-to-br from-gray-50 to-blue-50/30">

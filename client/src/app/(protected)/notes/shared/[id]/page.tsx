@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { shareNote, getNoteById } from "@/services/notes.api";
 import { toast } from "sonner";
@@ -40,7 +40,8 @@ export default function SharedNotePage() {
 
       toast.success("Authentication successful! Loading note...");
     } catch (error) {
-      toast.error("Unable to authenticate email. Please check and try again.");
+      console.log(error);
+      
     } finally {
       setIsSubmitting(false);
       setIsLoading(false);

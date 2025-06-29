@@ -7,11 +7,7 @@ import {
   Upload,
   BookOpen,
   GraduationCap,
-  Search,
-  Settings,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";

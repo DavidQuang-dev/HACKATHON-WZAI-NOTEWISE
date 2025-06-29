@@ -8,7 +8,6 @@ import {
   LogOut,
   Monitor,
   Moon,
-  Star,
   Sun,
   User,
 } from "lucide-react";
