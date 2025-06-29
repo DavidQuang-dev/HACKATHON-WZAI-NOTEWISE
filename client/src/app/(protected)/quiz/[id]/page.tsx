@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useQuizStore } from "@/store/quizStore";
 import { useNoteLogic } from "@/hooks/use-quiz";
 import { useChatStore } from "@/store/chatStore";
+import { useParams } from "next/navigation";
 
 export default function QuizPage() {
   const {
@@ -19,11 +20,15 @@ export default function QuizPage() {
     showHint,
     isComplete,
     quizTitle,
+    isSubmitting,
+    currentQuestionIndex,
 
     // Actions
     setSelectedAnswer,
     toggleHint,
-    submitAnswer,
+    saveAnswer,
+    previousQuestion,
+    submitQuiz,
     retakeQuiz,
 
     // Getters
@@ -33,9 +38,13 @@ export default function QuizPage() {
     getTotalQuestions,
     getCorrectAnswers,
     getIncorrectAnswers,
+    isLastQuestion,
   } = useQuizStore();
 
+  const params = useParams();
+  const quizId = params?.id as string;
   const { currentNoteId } = useChatStore();
+  const { fetchQuizById } = useNoteLogic();
 
   const currentQuestion = getCurrentQuestion();
   const progress = getProgress();
@@ -43,6 +52,11 @@ export default function QuizPage() {
   const totalQuestions = getTotalQuestions();
   const correctAnswers = getCorrectAnswers();
   const incorrectAnswers = getIncorrectAnswers();
+
+  useEffect(() => {
+    // Fetch quiz data when component mounts
+    fetchQuizById(quizId);
+  }, [quizId]);
 
   if (isComplete) {
     return (
@@ -156,18 +170,20 @@ export default function QuizPage() {
               </Button>
             </Link>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Progress</span>
+              <span className="text-sm text-gray-600">
+                Question {currentQuestionIndex + 1} of {totalQuestions}
+              </span>
               <Progress
-                value={progress}
+                value={getProgress()}
                 className="w-32"
                 style={{
-                  background: "#2563eb", // from-blue-600 to-blue-700
+                  background: "#2563eb",
                   height: "8px",
                   borderRadius: "9999px",
                 }}
               />
               <span className="text-sm font-medium text-gray-900">
-                {Math.round(progress)}%
+                {Math.round(getProgress())}%
               </span>
             </div>
           </div>
@@ -176,39 +192,47 @@ export default function QuizPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {quizTitle}
             </h1>
-            <p className="text-gray-600 text-lg">Multiple Choice Questions</p>
+            <p className="text-gray-600 text-lg">Câu hỏi trắc nghiệm</p>
             <p className="text-sm text-gray-500 mt-1">
-              Choose the best answer for each question.
+              Hãy chọn đáp án đúng nhất cho mỗi câu hỏi.
             </p>
           </div>
 
           <Card className="border-0 shadow-xl shadow-gray-200/50 bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-2xl text-gray-900">
-                {currentQuestion.question}
+                {currentQuestion.name_vi}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
               <RadioGroup
                 value={selectedAnswer}
                 onValueChange={setSelectedAnswer}
+                disabled={isSubmitting}
               >
-                {currentQuestion.options.map((option, index) => (
+                {currentQuestion.answers.map((answer, index) => (
                   <div
                     key={index}
-                    className="flex items-center space-x-4 p-4 rounded-xl hover:bg-blue-50/50 transition-colors cursor-pointer"
-                    onClick={() => setSelectedAnswer(index.toString())}
+                    className={`flex items-center space-x-4 p-4 rounded-xl transition-colors cursor-pointer ${
+                      isSubmitting
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-blue-50/50"
+                    }`}
+                    onClick={() => !isSubmitting && setSelectedAnswer(index.toString())}
                   >
                     <RadioGroupItem
                       value={index.toString()}
                       id={`option-${index}`}
                       className="text-blue-600"
+                      disabled={isSubmitting}
                     />
                     <Label
                       htmlFor={`option-${index}`}
-                      className="flex-1 cursor-pointer text-base font-medium text-gray-700"
+                      className={`flex-1 text-base font-medium text-gray-700 ${
+                        isSubmitting ? "cursor-not-allowed" : "cursor-pointer"
+                      }`}
                     >
-                      {option}
+                      {answer.name_vi}
                     </Label>
                   </div>
                 ))}
@@ -221,7 +245,7 @@ export default function QuizPage() {
                       <Lightbulb className="h-5 w-5" />
                     </div>
                     <span className="font-semibold">
-                      Hint for question: {currentQuestion.question}
+                      Hint for question: {currentQuestion.hint}
                     </span>
                   </div>
                   <p className="text-yellow-700 font-medium">
@@ -230,22 +254,49 @@ export default function QuizPage() {
                 </div>
               )}
 
-              <div className="flex gap-4 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={toggleHint}
-                  className="flex items-center gap-2 h-12 px-6 bg-transparent border-gray-200 hover:bg-yellow-50 hover:border-yellow-300"
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  {showHint ? "Hide Hint" : "Show Hint"}
-                </Button>
-                <Button
-                  onClick={submitAnswer}
-                  disabled={!selectedAnswer}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
-                >
-                  Submit Answer
-                </Button>
+              <div className="flex justify-between pt-4">
+                <div className="flex gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={toggleHint}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 h-12 px-6 bg-transparent border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 disabled:opacity-50"
+                  >
+                    <Lightbulb className="h-4 w-4" />
+                    {showHint ? "Hide Hint" : "Show Hint"}
+                  </Button>
+
+                  {currentQuestionIndex > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={previousQuestion}
+                      disabled={isSubmitting}
+                      className="h-12 px-6 bg-transparent border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Previous
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  {!isLastQuestion() ? (
+                    <Button
+                      onClick={saveAnswer}
+                      disabled={!selectedAnswer || isSubmitting}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                    >
+                      Next Question
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={submitQuiz}
+                      disabled={!selectedAnswer || isSubmitting}
+                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                    >
+                      {isSubmitting ? "Submitting Quiz..." : "Submit Quiz"}
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

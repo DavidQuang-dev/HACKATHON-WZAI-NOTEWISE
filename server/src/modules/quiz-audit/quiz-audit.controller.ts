@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody, ApiBasicAuth, ApiBearerAuth } from '@nestjs/swagger';
 import { QuizAuditService } from './quiz-audit.service';
 import { CreateQuizAuditDto } from './dto/create-quiz-audit.dto';
 import { Request } from '@nestjs/common';
 
 @ApiTags('Quiz Audit')
+@ApiBearerAuth()
 @Controller('quiz-audit')
 export class QuizAuditController {
     constructor(private readonly quizAuditService: QuizAuditService) { }
@@ -16,7 +17,6 @@ export class QuizAuditController {
     @ApiResponse({ status: 400, description: 'Bad request' })
     create(@Body() createQuizAuditDto: CreateQuizAuditDto, @Request() req) {
         const user = req.user;
-        createQuizAuditDto.accountId = user.id;
-        return this.quizAuditService.create(createQuizAuditDto, user);
+        return this.quizAuditService.create(createQuizAuditDto as any, [], user.id);
     }
 }
