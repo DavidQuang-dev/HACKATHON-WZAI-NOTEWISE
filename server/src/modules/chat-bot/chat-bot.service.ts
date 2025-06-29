@@ -59,7 +59,7 @@ export class ChatBotService {
           const conversationTitle =
             await this.gemini.generateConversationTitle(question);
           conversation = await this.chatConversations.create({
-            createdBy: userId,
+            createdBy: userId, 
             conversationTitle,
             noteId,
           });
