@@ -11,6 +11,7 @@ import {
   fullTranscribePrompt,
   generateConversationTilePrompt,
   generativePrompt,
+  notePrompt,
   quizPrompt,
   summaryPrompt,
 } from './prompt.cofig';
@@ -29,11 +30,30 @@ export interface SummaryResponse {
   description_vi: string;
   description_en: string;
 }
-export interface FullTranscribeResponse {
+
+export interface NoteResponse {
   name_vi: string;
   name_en: string;
   description_vi: string;
   description_en: string;
+}
+
+
+export interface AnswerResponse {
+  content_vi: string;
+  content_en: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionResponse {
+  name_vi: string;
+  name_en: string;
+  description_vi?: string;
+  description_en?: string;
+  ordering: number;
+  hint?: string;
+  answers: AnswerResponse[];
+  correctAnswer: string;
 }
 export interface QuizResponse {
   name_vi: string;
@@ -42,9 +62,13 @@ export interface QuizResponse {
   description_en: string;
   totalQuestion: number,
   estimatedTime: number,
-  Questions?: {
-    
-  }
+  questions?: QuestionResponse[];
+}
+export interface FullTranscribeResponse {
+  name_vi: string;
+  name_en: string;
+  description_vi: string;
+  description_en: string;
 }
 
 @Injectable()
@@ -133,6 +157,35 @@ export class GeminiService {
     }
   }
 
+  async generateNote(transcribe: string): Promise<NoteResponse> {
+    if (!transcribe || transcribe.trim().length === 0) {
+      throw new BadRequestException('Transcription cannot be empty');
+    }
+    const notePromptText = notePrompt(transcribe);
+    try {
+      const maxTokens = 2048; // Adjust based on your needs
+      const temperature = 0.5; // Adjust based on your needs
+      const result = await this.model.generateContent({
+        contents: [{ parts: [{ text: notePromptText }] }],
+        generationConfig: {
+          maxOutputTokens: maxTokens,
+          temperature: temperature,
+        },
+      });
+      const response = await result.response;
+      const responseText = (await result.response).text();
+      const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
+      const jsonContent = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
+
+      const noteRes: NoteResponse = JSON.parse(jsonContent);
+
+      return noteRes;
+    } catch (error) {
+      this.logger.error('Failed to generate note', error);
+      throw new BadRequestException('Failed to generate note');
+    }
+  }
+
   /**
    * Generates a summary of the transcription using Gemini AI
    * @param transcribe The transcription text to summarize
@@ -202,7 +255,7 @@ export class GeminiService {
     }
     const quiz = quizPrompt(transcribe);
     try {
-      const maxTokens = 2048; // Adjust based on your needs
+      const maxTokens = 4096; // Adjust based on your needs
       const temperature = 0.5; // Adjust based on your needs
       const result = await this.model.generateContent({
         contents: [{ parts: [{ text: quiz }] }],
@@ -211,20 +264,60 @@ export class GeminiService {
           temperature: temperature,
         },
       });
+
       const responseText = (await result.response).text();
-      const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
-      const jsonContent = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
-      const response = JSON.parse(jsonContent);
-      // chuyển đổi response thành object
+
+      // Xử lý loại bỏ các markdown ```json ``` nếu có
+      let cleaned = responseText.trim();
+
+      // Trường hợp bị bọc bởi ```json ... ```
+      if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/^```json/, '').trim();
+      }
+      if (cleaned.endsWith('```')) {
+        cleaned = cleaned.replace(/```$/, '').trim();
+      }
+
+      // Nếu vẫn còn dấu ``` rải rác, tiếp tục loại bỏ
+      cleaned = cleaned.replace(/```/g, '').trim();
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        this.logger.error('JSON parse failed. Raw text:', cleaned);
+        throw new BadRequestException('Failed to parse quiz JSON');
+      }
+
+      const questions = (parsed.questions || []).map((q: any, index: number) => ({
+        name_vi: q.name_vi,
+        name_en: q.name_en,
+        description_vi: q.description_vi || '',
+        description_en: q.description_en || '',
+        ordering: q.ordering || index + 1,
+        hint: q.hint || '',
+        correctAnswer: q.correctAnswer,
+        answers: (q.answers || []).map((a: any) => ({
+          content_vi: a.content_vi,
+          content_en: a.content_en,
+          isCorrect: a.isCorrect === true,
+        })),
+      }));
+
       const quizResponse: QuizResponse = {
-        name_vi: response.name_vi || response.name,
-        name_en: response.name_en || response.name,
-        description_vi: response.description_vi || response.description,
-        description_en: response.description_en || response.description,
-        totalQuestion: response.totalQuestion || 0,
-        estimatedTime: response.estimatedTime || 30,
+        name_vi: parsed.name_vi || parsed.name,
+        name_en: parsed.name_en || parsed.name,
+        description_vi: parsed.description_vi || parsed.description,
+        description_en: parsed.description_en || parsed.description,
+        totalQuestion: parsed.totalQuestion || questions.length,
+        estimatedTime: parsed.estimatedTime || 30,
+        questions,
       };
-      this.logger.log(`Quiz generated with ${quizResponse.totalQuestion} questions and estimated time ${quizResponse.estimatedTime}`);
+
+      this.logger.log(
+        `Quiz generated with ${quizResponse.totalQuestion} questions and estimated time ${quizResponse.estimatedTime} mins`
+      );
+
       return quizResponse;
     } catch (error) {
       this.logger.error('Failed to generate full transcription', error);

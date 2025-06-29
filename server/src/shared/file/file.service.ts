@@ -7,20 +7,26 @@ import { SummarizedTranscriptService } from 'src/modules/summarized-transcript/s
 import { TranscriptService } from 'src/modules/transcript/transcript.service';
 import { QuizService } from 'src/modules/quiz/quiz.service';
 import { HandleAudioFileResponse } from './dto/handle-audio-file-res.dto';
+import { QuestionService } from 'src/modules/question/question.service';
+import { AnswerService } from 'src/modules/answer/answer.service';
+import { NoteService } from 'src/modules/note/note.service';
 
 @Injectable()
 export class FileService {
   private readonly logger = new Logger(FileService.name);
-  constructor(private readonly whisperService: WhisperService, 
-    private readonly geminiService: GeminiService, 
+  constructor(private readonly whisperService: WhisperService,
+    private readonly geminiService: GeminiService,
     private readonly summaryService: SummarizedTranscriptService,
     private readonly transcriptService: TranscriptService,
-    private readonly quizService: QuizService
+    private readonly quizService: QuizService,
+    private readonly questionService: QuestionService,
+    private readonly answerService: AnswerService,
+    private readonly noteService: NoteService
   ) { }
 
   private validateFile(file: Express.Multer.File): void {
     this.logger.log(`Validating file: ${file?.originalname}, size: ${file?.size}, mimetype: ${file?.mimetype}`);
-    
+
     if (!file) {
       this.logger.error('No file provided to validate');
       throw new HttpException('No file uploaded or file is empty', 400);
@@ -90,21 +96,21 @@ export class FileService {
   async extractTranscribe(file: Express.Multer.File): Promise<HandleAudioFileResponse> {
     try {
       this.logger.log(`Starting extractTranscribe for file: ${file?.originalname}`);
-      
+
       this.logger.log('Validating uploaded file...');
       this.validateFile(file);
 
       this.logger.log('Starting transcription using WhisperService...');
       const transcription = await this.whisperService.transcribeAudio(file);
-      
+
       if (!transcription?.trim()) {
         this.logger.error('Transcription failed or returned empty text.');
         throw new BadRequestException('Transcription failed or returned empty text.');
       }
       this.logger.log(`Transcription completed successfully. Length: ${transcription.length} characters`);
 
-      this.logger.log('Calling GeminiService for summary, full transcription, and quiz generation...');
-      const [summary, fullTranscribeData, quizData] = await Promise.all([
+      this.logger.log('Calling GeminiService for summary, full transcription, quiz generation, and note generation...');
+      const [summary, fullTranscribeData, quizData, noteData] = await Promise.all([
         this.geminiService.generateSummary(transcription).catch(error => {
           this.logger.error('Summary generation failed:', error.message);
           throw new BadRequestException(`Summary generation failed: ${error.message}`);
@@ -117,9 +123,13 @@ export class FileService {
           this.logger.error('Quiz generation failed:', error.message);
           throw new BadRequestException(`Quiz generation failed: ${error.message}`);
         }),
+        this.geminiService.generateNote(transcription).catch(error => {
+          this.logger.error('Note generation failed:', error.message);
+          throw new BadRequestException(`Note generation failed: ${error.message}`);
+        }),
       ]);
 
-      if (!summary || !fullTranscribeData || !quizData) {
+      if (!summary || !fullTranscribeData || !quizData || !noteData) {
         this.logger.error('AI generation failed - one or more results are null/undefined');
         throw new BadRequestException('AI generation failed.');
       }
@@ -157,7 +167,47 @@ export class FileService {
           throw new BadRequestException(`Quiz creation failed: ${error.message}`);
         })
       ]);
-      this.logger.log('Data saved successfully.');
+
+      const note = await this.noteService.create({
+        name_vi: noteData.name_vi,
+        name_en: noteData.name_en,
+        description_vi: noteData.description_vi,
+        description_en: noteData.description_en,
+        summarizedTranscript: createdSummary,
+        transcript: createdFullTranscription,
+        quiz: createdQuiz,
+      }, []).catch(error => {
+        this.logger.error('Note creation failed:', error.message);
+        throw new BadRequestException(`Note creation failed: ${error.message}`);
+      });
+
+      // add questions to quiz 
+      const questionEntities = await Promise.all(
+        (quizData.questions ?? []).map(async (q, idx) => {
+          const question = await this.questionService.create({
+            name_vi: q.name_vi,
+            name_en: q.name_en,
+            description_vi: q.description_vi,
+            description_en: q.description_en,
+            ordering: q.ordering || idx + 1,
+            hint: q.hint,
+            quiz: createdQuiz,
+          }, []);
+
+          const answerEntities = await Promise.all(
+            q.answers.map((a) =>
+              this.answerService.create({
+                name_vi: a.content_vi,
+                name_en: a.content_en,
+                isCorrect: a.isCorrect,
+                question: question,
+              }, [])
+            )
+          );
+
+          return { ...question, answers: answerEntities };
+        })
+      );
 
       const response: HandleAudioFileResponse = {
         summary: createdSummary,
@@ -174,12 +224,12 @@ export class FileService {
         stack: error.stack,
         fileName: file?.originalname
       });
-      
+
       // Re-throw known exceptions
       if (error instanceof BadRequestException || error instanceof HttpException) {
         throw error;
       }
-      
+
       // Wrap unknown errors
       throw new BadRequestException(`File processing failed: ${error.message}`);
     }
