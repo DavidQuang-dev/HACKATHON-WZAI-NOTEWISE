@@ -19,7 +19,7 @@ export class QuizAuditService extends BaseService<QuizAudit> {
     super(quizAuditRepository);
   }
 
-  override async create(createDto: DeepPartial<QuizAudit>, _relations: string[] = [], accountId?: string): Promise<QuizAudit> {
+  async createQuiz(createDto: DeepPartial<QuizAudit>, accountId?: string): Promise<QuestionAudit[]> {
     const dto = createDto as CreateQuizAuditDto;
 
     // 1. Lấy quiz và load luôn danh sách câu hỏi + đáp án
@@ -83,7 +83,6 @@ export class QuizAuditService extends BaseService<QuizAudit> {
     savedQuizAudit.isDone = true;
     await this.quizAuditRepository.save(savedQuizAudit);
 
-    console.log('QuizAudit created with score:', score);
 
     // 5. Trả về quizAudit với questionAudits
     const result = await this.quizAuditRepository.findOne({
@@ -95,7 +94,7 @@ export class QuizAuditService extends BaseService<QuizAudit> {
       throw new Error('Failed to retrieve created quiz audit');
     }
 
-    return result;
+    return questionAudits;
   }
 
 }

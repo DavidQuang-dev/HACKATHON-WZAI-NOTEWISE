@@ -6,6 +6,7 @@ import { Quiz } from './entities/quiz.entity';
 import { BaseFilterDto } from 'src/common/base/dto/base-filter.dto';
 import { PaginatedResponseDto } from 'src/common/base/dto/paginated-response.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { QuestionAudit } from '../question-audit/entities/question-audit.entity';
 
 @ApiTags('Quiz')
 @Controller('quiz')
