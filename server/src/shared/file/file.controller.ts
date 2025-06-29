@@ -5,7 +5,8 @@ import {
     UseInterceptors,
     HttpStatus,
     HttpException,
-    Logger
+    Logger,
+    Body
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiResponse, ApiBody } from '@nestjs/swagger';
@@ -27,6 +28,89 @@ export class FileController {
         if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
             this.logger.log('Created uploads directory');
+        }
+    }
+
+    @Post('process-text')
+    @Public(true)
+    @ApiOperation({
+        summary: 'Process text content',
+        description: 'Process text content to generate summary and quiz'
+    })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                text: {
+                    type: 'string',
+                    description: 'Text content to process',
+                    example: 'Your text content here...'
+                }
+            },
+            required: ['text']
+        }
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Text processed successfully',
+        type: HandleAudioFileResponse,
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: 'Invalid text content',
+    })
+    @ApiResponse({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Processing failed',
+    })
+    async processText(
+        @Body() body: { text: string }
+    ): Promise<{
+        success: boolean;
+        message: string;
+        data?: HandleAudioFileResponse;
+        statusCode: number;
+    }> {
+        try {
+            this.logger.log('Processing text content...');
+
+            if (!body.text || body.text.trim().length === 0) {
+                this.logger.error('No text content provided');
+                throw new HttpException('Text content is required', HttpStatus.BAD_REQUEST);
+            }
+
+            if (body.text.length > 50000) { // 50KB text limit
+                this.logger.error(`Text too long: ${body.text.length} characters`);
+                throw new HttpException('Text content exceeds maximum length limit', HttpStatus.BAD_REQUEST);
+            }
+
+            this.logger.log('Starting text processing...');
+            const result = await this.fileService.processTextContent(body.text);
+
+            this.logger.log('Text processed successfully');
+
+            return {
+                success: true,
+                message: 'Text processed successfully',
+                data: result,
+                statusCode: HttpStatus.OK
+            };
+
+        } catch (error) {
+            this.logger.error(`Text processing failed:`, {
+                message: error.message,
+                stack: error.stack,
+                textLength: body?.text?.length
+            });
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new HttpException(
+                `Internal server error during text processing: ${error.message}`,
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -268,7 +352,7 @@ export class FileController {
 
             // TODO: Implement document processing logic
             // const result = await this.fileService.processDocument(file);
-            
+
             // Temporary response for testing
             this.logger.log(`Document processed successfully: ${file.originalname}`);
 
