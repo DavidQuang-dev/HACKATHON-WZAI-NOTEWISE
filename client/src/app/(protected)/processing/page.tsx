@@ -35,6 +35,7 @@ export default function ProcessingPage() {
   const [transcriptText, setTranscriptText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [processedData, setProcessedData] = useState<any>(null);
+  const [noteId, setNoteId] = useState<string | null>(null);
 
   const [steps, setSteps] = useState<ProcessingStep[]>([
     {
@@ -92,6 +93,26 @@ export default function ProcessingPage() {
         const parsed = JSON.parse(storedData);
         console.log("Parsed processed data:", parsed);
         setProcessedData(parsed);
+
+        // Extract and store note ID for navigation
+        const id = parsed?.data?.summary?.id || parsed?.summary?.id;
+        if (id) {
+          setNoteId(id);
+          localStorage.setItem("currentNoteId", id);
+          console.log("Note ID saved:", id);
+        } else {
+          console.log("No note ID found in data");
+          console.log("Checking for other possible ID locations...");
+          console.log(
+            "data.fullTranscription.id:",
+            parsed?.data?.fullTranscription?.id
+          );
+          console.log("data.quiz.id:", parsed?.data?.quiz?.id);
+          console.log(
+            "All available data:",
+            JSON.stringify(parsed.data, null, 2)
+          );
+        }
       } catch (error) {
         console.error("Error parsing stored data:", error);
       }
@@ -492,7 +513,7 @@ export default function ProcessingPage() {
                       } câu hỏi thực hành.`
                     : "Your content has been successfully converted into smart notes with key points, summaries, and practice questions."}
                 </p>
-                <Link href="/notes">
+                <Link href={noteId ? `/notes/${noteId}` : "/notes"}>
                   <Button size="lg" variant="secondary">
                     View Your Notes
                   </Button>

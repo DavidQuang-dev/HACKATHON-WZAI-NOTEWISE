@@ -16,6 +16,7 @@ export class ChatConversationsService {
   ): Promise<ChatConversation> {
     const chatConversation = new ChatConversation({
       conversationTitle: CreateDto.conversationTitle,
+      noteId: CreateDto.noteId,
       metadata: {
         createdAt: new Date(),
         createdBy: CreateDto.createdBy,

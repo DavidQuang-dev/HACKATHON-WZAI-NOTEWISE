@@ -47,6 +47,7 @@ export class ChatBotService {
         conversation = await this.chatConversations.create({
           createdBy: userId,
           conversationTitle,
+          noteId,
         });
       } else {
         conversation = await this.chatConversations.findOne(conversationId);
@@ -55,6 +56,13 @@ export class ChatBotService {
           this.Logger.warn(
             `Conversation ${conversationId} not found, creating new one`,
           );
+          const conversationTitle =
+            await this.gemini.generateConversationTitle(question);
+          conversation = await this.chatConversations.create({
+            createdBy: userId,
+            conversationTitle,
+            noteId,
+          });
         }
       }
 
@@ -65,9 +73,12 @@ export class ChatBotService {
         createdBy: userId,
       });
 
-      const conversationHistory = await this.findAllMessageInConversation(
+      const conversationHistory = await this.findAllMessageInConversationByConversationId(
         conversation._id.toString(),
       );
+      if (!conversationHistory) {
+        throw new Error('Conversation history not found');
+      }
 
       let transcribeRes: any;
       transcribeRes = await this.transcriptService.findOneByOptions({ where: { note: { id: noteId } } });
@@ -117,7 +128,42 @@ export class ChatBotService {
   }
 
 
-  async findAllMessageInConversation(
+  async findAllMessageInConversationByConversationId(
+    conversationId: string,
+  ): Promise<SearchResponseConversationDto> {
+    try {
+      const conversation = await this.chatConversations.findOne(conversationId);
+      if (!conversation) {
+        throw new Error('Conversation not found');
+      }
+
+      const messages = await this.chatMessages.findAll(conversation._id.toString());
+      if (!messages) {
+        this.Logger.warn(`No messages found in conversation ${conversation._id.toString()}`);
+      }
+      const messagesResponse: ChatMessageResponse[] = messages.map(
+        (message: any) => ({
+          _id: message._id.toString(),
+          content: message.content,
+          sender: message.sender,
+          createdAt: message.metadata.createdAt.toISOString(),
+        }),
+      );
+      const conversationResponse: SearchResponseConversationDto = {
+        conversation: {
+          _id: conversation._id.toString(),
+          conversationTitle: conversation.conversationTitle,
+        },
+        messages: messagesResponse,
+      };
+      return conversationResponse;
+    } catch (error) {
+      this.Logger.error('Error fetching messages in conversation:', error);
+      throw new Error('Failed to fetch messages in conversation');
+    }
+  }
+
+    async findAllMessageInConversationByNoteId(
     noteId: string,
   ): Promise<SearchResponseConversationDto> {
     try {

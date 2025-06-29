@@ -24,4 +24,14 @@ export class CreateChatConversationDto {
   @IsString({ message: 'User ID must be a string' })
   @MaxLength(100, { message: 'User ID cannot exceed 100 characters' })
   createdBy: string;
+
+  @ApiProperty({
+    description: 'Note ID associated with the conversation',
+    example: '52629604-c938-4a6b-a7f5-acc437b408e9',
+    maxLength: 100,
+    required: false,
+  })
+  @IsString({ message: 'Note ID must be a string' })
+  @MaxLength(100, { message: 'Note ID cannot exceed 100 characters' })
+  noteId?: string;
 }
