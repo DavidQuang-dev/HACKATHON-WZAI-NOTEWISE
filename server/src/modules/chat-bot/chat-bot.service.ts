@@ -69,13 +69,19 @@ export class ChatBotService {
         conversation._id.toString(),
       );
 
-      const transcribe = await this.transcriptService.findOneByOptions({ where: { note: { id: noteId } } });
-      if (!transcribe) {
-        throw new Error('Transcription not found');
+      let transcribeRes: any;
+      transcribeRes = await this.transcriptService.findOneByOptions({ where: { note: { id: noteId } } });
+      if (!transcribeRes) {
+        transcribeRes = {
+          name_vi: 'không tìm thấy bản ghi âm',
+          name_en: 'Transcribe not found',
+          description_vi: 'Không tìm thấy bản ghi âm',
+          description_en: 'Transcribe not found',
+        }
       }
 
       const context = {
-        transcribe: { description_vi: transcribe.description_vi, description_en: transcribe.description_en },
+        transcribe: { description_vi: transcribeRes.description_vi, description_en: transcribeRes.description_en },
         conversationHistory: conversationHistory.messages,
       };
       this.Logger.log('Context for the question:', context);
