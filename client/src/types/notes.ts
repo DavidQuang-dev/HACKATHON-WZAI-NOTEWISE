@@ -2,7 +2,7 @@ export interface Note {
     id: string;
     name_vi: string;
     name_en: string;
-    description: string;
+    description_vi: string;
     description_en: string;
     summarizedTranscript: string | null;
     account: string

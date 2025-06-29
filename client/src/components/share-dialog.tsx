@@ -11,45 +11,55 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+
+interface ShareDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  shareUrl: string;
+}
 
 export function ShareDialog({
   open,
   onOpenChange,
   shareUrl,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  shareUrl: string;
-}) {
-  const { toast } = useToast();
+}: ShareDialogProps) {
+  const [isCopying, setIsCopying] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(shareUrl);
-    toast({
-      title: "Copied!",
-      description: "The link has been copied to your clipboard.",
-    });
+    try {
+      setIsCopying(true);
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Liên kết đã được sao chép vào clipboard.");
+    } catch (error) {
+      toast.error("Không thể sao chép liên kết. Vui lòng thử lại.");
+    } finally {
+      setIsCopying(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Đã tạo liên kết công khai</DialogTitle>
+          <DialogTitle>Chia sẻ ghi chú</DialogTitle>
           <DialogDescription>
-            Sao chép liên kết bên dưới để chia sẻ với người khác.
+            Sao chép liên kết bên dưới và gửi cho người bạn muốn chia sẻ. Họ sẽ
+            cần nhập email của mình để truy cập ghi chú.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <Input value={shareUrl} readOnly className="flex-1" />
-          <Button onClick={handleCopy}>Sao chép liên kết</Button>
+          <Button onClick={handleCopy} disabled={isCopying}>
+            {isCopying ? "Đang sao chép..." : "Sao chép"}
+          </Button>
         </div>
 
         <DialogFooter>
           <p className="text-sm text-gray-500">
-            Người nhận chỉ cần dán link này vào trình duyệt để truy cập.
+            Người nhận sẽ cần nhập email của họ để xác thực và xem nội dung ghi
+            chú.
           </p>
         </DialogFooter>
       </DialogContent>
