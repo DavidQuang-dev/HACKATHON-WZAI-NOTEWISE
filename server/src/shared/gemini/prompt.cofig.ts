@@ -58,6 +58,37 @@ ${question}
 `;
 };
 
+export const notePrompt = (transcribe: string): string => {
+  return `
+Bạn là một AI chuyên gia tóm tắt nội dung học tập hoặc cuộc họp. Nhiệm vụ của bạn là tạo ra bản tóm tắt ngắn gọn, rõ ràng, phù hợp với mục đích lưu trữ trong hệ thống ghi chú học tập.
+
+## NỘI DUNG CẦN TÓM TẮT:
+${transcribe}
+
+## YÊU CẦU:
+- Viết tiêu đề ngắn gọn, súc tích bằng tiếng Việt và tiếng Anh
+- Tóm tắt nội dung chính trong 3–5 câu cho mỗi ngôn ngữ
+- Không bịa đặt thông tin, bám sát nội dung đã cho
+- Sử dụng ngôn ngữ rõ ràng, phù hợp ngữ cảnh học thuật hoặc công việc
+
+## ĐỊNH DẠNG JSON CHÍNH XÁC:
+{
+  "name_vi": "Tiêu đề ngắn bằng tiếng Việt",
+  "name_en": "Short title in English",
+  "description_vi": "Tóm tắt nội dung chính bằng tiếng Việt",
+  "description_en": "Summary of the content in English"
+}
+
+## LƯU Ý QUAN TRỌNG:
+- Chỉ trả về đúng JSON như trên, không thêm \`\`\`, không markdown, không lời giải thích
+- Không để trống bất kỳ trường nào
+- Phù hợp để lưu làm ghi chú trong hệ thống học tập
+
+Bắt đầu trả về JSON ngay bây giờ:
+`;
+};
+
+
 export const summaryPrompt = (transcribe: string): string => {
   return `
 Bạn là một AI chuyên gia tóm tắt nội dung học tập. Nhiệm vụ của bạn là tạo ra bản tóm tắt chất lượng cao, rõ ràng và phù hợp để lưu trữ dưới dạng JSON.
@@ -145,7 +176,7 @@ Hãy xử lý văn bản transcribe ngay bây giờ:
 
 export const quizPrompt = (transcribe: string): string => {
   return `
-Bạn là một AI chuyên gia tạo bài kiểm tra trắc nghiệm từ nội dung học tập. Hãy tạo chính xác 10 câu hỏi trắc nghiệm dựa trên nội dung được cung cấp bên dưới.
+Bạn là một AI chuyên gia tạo bài kiểm tra trắc nghiệm từ nội dung học tập. Hãy tạo chính xác 10 câu hỏi trắc nghiệm dựa trên nội dung được cung cấp dưới đây.
 
 ## NỘI DUNG HỌC TẬP:
 ${transcribe}
@@ -153,45 +184,50 @@ ${transcribe}
 ## YÊU CẦU:
 - Tạo đúng 10 câu hỏi trắc nghiệm
 - Mỗi câu có 4 lựa chọn (A, B, C, D)
-- Có 1 đáp án đúng duy nhất
-- Mỗi câu có gợi ý (hint)
-- Nội dung câu hỏi bám sát nội dung học tập, không bịa đặt
-- Không được thêm bất kỳ giải thích, markdown hay văn bản dư thừa
+- Có duy nhất 1 đáp án đúng, thể hiện qua trường "correctAnswer": "A" | "B" | "C" | "D"
+- Mỗi câu có gợi ý (hint) hỗ trợ người học trả lời
+- Trả về nội dung bằng cả tiếng Việt và tiếng Anh
+- Không bịa đặt thông tin, chỉ dựa trên nội dung học tập
+- Không thêm giải thích, markdown, chú thích hay bất kỳ văn bản dư thừa nào
 
-## ĐỊNH DẠNG JSON (TRẢ VỀ DUY NHẤT):
+## ĐỊNH DẠNG JSON CHÍNH XÁC (KHÔNG ĐƯỢC THAY ĐỔI CẤU TRÚC):
 {
   "name_vi": "Tiêu đề bài kiểm tra bằng tiếng Việt",
   "name_en": "Quiz title in English",
-  "description_vi": "Mô tả chi tiết về nội dung bài kiểm tra bằng tiếng Việt",
+  "description_vi": "Mô tả chi tiết bằng tiếng Việt về bài kiểm tra",
   "description_en": "Detailed quiz description in English",
   "totalQuestion": 10,
   "estimatedTime": 20,
   "questions": [
     {
-      "id": 1,
-      "question": "Nội dung câu hỏi?",
-      "answer": [
-        { "id": "A", "content": "Lựa chọn A" },
-        { "id": "B", "content": "Lựa chọn B" },
-        { "id": "C", "content": "Lựa chọn C" },
-        { "id": "D", "content": "Lựa chọn D" }
-      ],
+      "name_vi": "Câu hỏi bằng tiếng Việt",
+      "name_en": "Question in English",
+      "description_vi": "Mô tả câu hỏi (nếu có)",
+      "description_en": "Question description (optional)",
+      "ordering": 1,
+      "hint": "Gợi ý hỗ trợ trả lời",
       "correctAnswer": "A",
-      "hint": "Gợi ý cho câu hỏi này"
+      "answers": [
+        { "content_vi": "Lựa chọn A", "content_en": "Choice A", "isCorrect": true },
+        { "content_vi": "Lựa chọn B", "content_en": "Choice B", "isCorrect": false },
+        { "content_vi": "Lựa chọn C", "content_en": "Choice C", "isCorrect": false },
+        { "content_vi": "Lựa chọn D", "content_en": "Choice D", "isCorrect": false }
+      ]
     }
-    // ... các câu còn lại
+    // ... 9 câu hỏi khác theo cùng cấu trúc. (xắp xếp thứ tự từ 1 đến 10)
   ]
 }
 
-## LƯU Ý QUAN TRỌNG:
-- Chỉ trả về JSON đúng theo định dạng trên, không bao gồm \`\`\`, markdown hay văn bản khác
-- Phải có đúng 10 câu hỏi, \`totalQuestion\` = 10
-- \`estimatedTime\` nên từ 15–30 phút
-- Các lựa chọn sai phải hợp lý, không quá dễ đoán
-- Hint phải có ích nhưng không tiết lộ đáp án
+## LƯU Ý:
+- Trả về **chính xác JSON như trên**, không thêm \`\`\`, không xuống dòng thừa
+- Đảm bảo \`totalQuestion\` là 10 và \`questions.length\` là 10
+- Các đáp án sai phải logic, không quá dễ loại trừ
+- Các hint phải hữu ích nhưng không tiết lộ đáp án
+- estimatedTime nên hợp lý, khoảng 15–30 phút tùy độ khó
 
-Hãy trả về JSON hợp lệ ngay bây giờ:`;
+Bắt đầu tạo JSON bài kiểm tra ngay bây giờ:`;
 };
+
 
 
 export const chunkingPrompt = (
