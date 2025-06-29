@@ -15,6 +15,7 @@ interface FileUploadProps {
   selectedFile?: File | null;
   onFileSelect: (file: File | null) => void;
   onUpload?: () => Promise<void>;
+  isProcessed?: boolean; // New prop to indicate if file is processed
 }
 
 export const FileUpload = ({
@@ -26,6 +27,7 @@ export const FileUpload = ({
   selectedFile,
   onFileSelect,
   onUpload,
+  isProcessed = false,
 }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -67,7 +69,7 @@ export const FileUpload = ({
         <Label className="mb-4 block text-lg font-semibold">{label}</Label>
       )}
 
-      {!value && !selectedFile ? (
+      {!isProcessed && !selectedFile ? (
         <div
           className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-300 group cursor-pointer min-h-[400px] flex flex-col items-center justify-center"
           onClick={() => inputRef.current?.click()}
@@ -106,7 +108,7 @@ export const FileUpload = ({
             disabled={uploading}
           />
         </div>
-      ) : selectedFile && !value ? (
+      ) : selectedFile && !isProcessed ? (
         // File selected but not uploaded yet
         <div className="border-2 border-solid border-blue-300 rounded-2xl p-12 text-center bg-blue-50/30 min-h-[400px] flex flex-col items-center justify-center">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -153,39 +155,52 @@ export const FileUpload = ({
           />
         </div>
       ) : (
+        // File processed successfully
         <div className="border-2 border-solid border-green-300 rounded-2xl p-12 text-center bg-green-50/30 min-h-[400px] flex flex-col items-center justify-center">
           <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <FileIcon className="h-10 w-10 text-green-600" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            File uploaded successfully!
+            File processed successfully!
           </h3>
+          <p className="text-gray-600 mb-2">{selectedFile?.name || "File"}</p>
           <p className="text-gray-600 mb-6">
-            Your file is ready for processing
+            Your file has been processed and is ready for generating notes
           </p>
           <div className="flex gap-4">
             <Button
               type="button"
               variant="outline"
               size="lg"
-              onClick={() => window.open(value, "_blank")}
-              className="border-green-300 text-green-700 hover:bg-green-50"
-            >
-              <Eye className="mr-2 h-5 w-5" />
-              View File
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={handleDeleteFile}
+              onClick={() => {
+                onFileSelect(null);
+                onChange("");
+                if (inputRef.current) inputRef.current.value = "";
+              }}
               disabled={uploading}
               className="border-red-300 text-red-700 hover:bg-red-50"
             >
               <Trash2 className="mr-2 h-5 w-5" />
               Remove File
             </Button>
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => inputRef.current?.click()}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <FileIcon className="mr-2 h-5 w-5" />
+              Change File
+            </Button>
           </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
         </div>
       )}
 

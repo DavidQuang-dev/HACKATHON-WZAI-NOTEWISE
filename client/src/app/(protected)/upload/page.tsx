@@ -18,8 +18,8 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(75);
   const [textContent, setTextContent] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [processedData, setProcessedData] = useState<any>(null);
   const router = useRouter();
 
   const handleUploadFile = async () => {
@@ -27,12 +27,23 @@ export default function UploadPage() {
 
     setIsUploading(true);
     try {
-      const data = await uploadFile(selectedFile);
-      console.log(data);
+      const response = await uploadFile(selectedFile);
+      console.log("Upload response:", response);
 
-      setFileUrl(data.data?.url || "");
-      toast.success("Tải file lên thành công!");
+      // Store the processed data instead of URL
+      setProcessedData(response.data);
+
+      // Store in localStorage for processing page to access
+      localStorage.setItem("processedData", JSON.stringify(response.data));
+
+      toast.success("Xử lý file thành công!");
+
+      // Automatically navigate to processing page after successful upload
+      setTimeout(() => {
+        router.push("/processing");
+      }, 1000); // Small delay to show success message
     } catch (error) {
+      console.error("Upload error:", error);
       toast.error("Tải file lên thất bại");
       throw error;
     } finally {
@@ -40,19 +51,63 @@ export default function UploadPage() {
     }
   };
 
+  const handleUploadText = async () => {
+    if (!textContent.trim()) return;
+
+    setIsUploading(true);
+    try {
+      // Create a Blob from text content to send as file
+      const textBlob = new Blob([textContent], { type: "text/plain" });
+      const textFile = new File([textBlob], "text-content.txt", {
+        type: "text/plain",
+      });
+
+      const response = await uploadFile(textFile);
+      console.log("Text upload response:", response);
+
+      // Store the processed data
+      setProcessedData(response.data);
+
+      // Store in localStorage for processing page to access
+      localStorage.setItem("processedData", JSON.stringify(response.data));
+
+      toast.success("Xử lý text thành công!");
+
+      // Automatically navigate to processing page after successful upload
+      setTimeout(() => {
+        router.push("/processing");
+      }, 1000); // Small delay to show success message
+    } catch (error) {
+      console.error("Text upload error:", error);
+      toast.error("Xử lý text thất bại");
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleGenerate = async () => {
-    if (selectedFile && !fileUrl) {
-      // Upload file first, then navigate
+    if (selectedFile && !processedData) {
+      // Upload and process file
       try {
         await handleUploadFile();
-        router.push("/processing");
+        // Navigation happens automatically in handleUploadFile
       } catch (error) {
         // Error already handled in handleUploadFile
         return;
       }
-    } else if (fileUrl || textContent) {
-      // File already uploaded or text content exists
+    } else if (processedData) {
+      // File already processed
       router.push("/processing");
+    } else if (textContent.trim()) {
+      // Upload and process text content
+      try {
+        await handleUploadText();
+        // Navigation happens automatically in handleUploadText
+      } catch (error) {
+        // Error already handled in handleUploadText
+        return;
+      }
     } else {
       toast.error("Vui lòng chọn file hoặc nhập nội dung");
     }
@@ -89,13 +144,17 @@ export default function UploadPage() {
               >
                 <FileUpload
                   label="Upload Audio"
-                  value={fileUrl}
-                  onChange={setFileUrl}
+                  value=""
+                  onChange={() => {}} // No need to handle onChange for processed data
                   resetOnDelete={true}
                   accept="audio/mpeg,audio/wav,audio/x-m4a"
                   selectedFile={selectedFile}
-                  onFileSelect={setSelectedFile}
+                  onFileSelect={(file) => {
+                    setSelectedFile(file);
+                    if (!file) setProcessedData(null); // Reset processed data when file is removed
+                  }}
                   onUpload={handleUploadFile}
+                  isProcessed={!!processedData}
                 />
               </TabsContent>
 
