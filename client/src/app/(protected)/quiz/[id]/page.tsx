@@ -9,9 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { Lightbulb, Check, X, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useQuizStore } from "@/store/quizStore";
-import { useNoteLogic } from "@/hooks/use-quiz";
 import { useChatStore } from "@/store/chatStore";
 import { useParams } from "next/navigation";
+import { useQuizLogic } from "@/hooks/use-quiz";
 
 export default function QuizPage() {
   const {
@@ -28,7 +28,6 @@ export default function QuizPage() {
     toggleHint,
     saveAnswer,
     previousQuestion,
-    submitQuiz,
     retakeQuiz,
 
     // Getters
@@ -41,13 +40,14 @@ export default function QuizPage() {
     isLastQuestion,
   } = useQuizStore();
 
+  const { submitQuiz, fetchQuizById } = useQuizLogic();
+
   const params = useParams();
   const quizId = params?.id as string;
   const { currentNoteId } = useChatStore();
-  const { fetchQuizById } = useNoteLogic();
+  const { setQuizId } = useQuizStore();
 
   const currentQuestion = getCurrentQuestion();
-  const progress = getProgress();
   const percentage = getScorePercentage();
   const totalQuestions = getTotalQuestions();
   const correctAnswers = getCorrectAnswers();
@@ -56,18 +56,24 @@ export default function QuizPage() {
   useEffect(() => {
     // Fetch quiz data when component mounts
     fetchQuizById(quizId);
+    setQuizId(quizId); // Set the quiz ID in the store
   }, [quizId]);
+
+  const handleSubmitQuiz = async () => {
+    // Ensure saveAnswer completes before submitting the quiz
+    await saveAnswer();
+    await submitQuiz();
+  };
 
   if (isComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-        {/* Quiz Results Content */}
         <main className="p-8">
           <div className="max-w-4xl mx-auto">
             <Card className="border-0 shadow-xl shadow-gray-200/50 bg-white/80 backdrop-blur-sm">
               <CardHeader className="text-center pb-8">
                 <CardTitle className="text-3xl font-bold text-gray-900">
-                  Quiz Results
+                  Kết quả bài kiểm tra
                 </CardTitle>
                 <p className="text-gray-600 mt-2">{quizTitle}</p>
               </CardHeader>
@@ -75,70 +81,33 @@ export default function QuizPage() {
                 <div className="text-8xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                   {percentage}%
                 </div>
-
                 <div className="flex justify-center gap-12">
                   <div className="text-center">
                     <div className="text-4xl font-bold text-green-600 mb-2">
                       {correctAnswers}/{totalQuestions}
                     </div>
                     <div className="text-sm text-green-600 font-medium">
-                      Correct Answers
+                      Đúng
                     </div>
                   </div>
                   <div className="text-center">
                     <div className="text-4xl font-bold text-red-600 mb-2">
                       {incorrectAnswers}/{totalQuestions}
                     </div>
-                    <div className="text-sm text-red-600 font-medium">
-                      Incorrect Answers
-                    </div>
+                    <div className="text-sm text-red-600 font-medium">Sai</div>
                   </div>
                 </div>
-
-                <Card className="text-left border-0 shadow-lg shadow-gray-200/50">
-                  <CardHeader>
-                    <CardTitle className="text-xl">Review Answers</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {Array.from({ length: totalQuestions }, (_, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
-                      >
-                        <span className="text-sm font-medium">
-                          Question {i + 1}: What is the main function of the
-                          cell membrane?
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
-                            Correct: {String.fromCharCode(65 + (i % 4))}
-                          </span>
-                          {i < correctAnswers ? (
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                              <Check className="h-5 w-5 text-green-600" />
-                            </div>
-                          ) : (
-                            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                              <X className="h-5 w-5 text-red-600" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
                 <div className="flex gap-4 justify-center">
                   <Button
                     variant="outline"
                     onClick={retakeQuiz}
                     className="h-12 px-8 bg-transparent border-gray-200 hover:bg-gray-50"
                   >
-                    Retake Quiz
+                    Làm lại
                   </Button>
                   <Link href={`/notes/${currentNoteId}`}>
                     <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                      Back to Notes
+                      Quay lại ghi chú
                     </Button>
                   </Link>
                 </div>
@@ -218,7 +187,9 @@ export default function QuizPage() {
                         ? "opacity-50 cursor-not-allowed"
                         : "hover:bg-blue-50/50"
                     }`}
-                    onClick={() => !isSubmitting && setSelectedAnswer(index.toString())}
+                    onClick={() =>
+                      !isSubmitting && setSelectedAnswer(index.toString())
+                    }
                   >
                     <RadioGroupItem
                       value={index.toString()}
@@ -289,7 +260,7 @@ export default function QuizPage() {
                     </Button>
                   ) : (
                     <Button
-                      onClick={submitQuiz}
+                      onClick={() => handleSubmitQuiz()}
                       disabled={!selectedAnswer || isSubmitting}
                       className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 h-12 px-8 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                     >

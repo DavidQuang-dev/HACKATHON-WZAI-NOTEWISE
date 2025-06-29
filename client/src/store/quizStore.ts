@@ -1,21 +1,22 @@
+import { submitQuiz } from "@/services/quiz.api";
 import { create } from "zustand";
 
 export interface Answer {
-    id: string;
-    name_vi: string;
-    name_en: string;
-    questionId: string;
+  id: string;
+  name_vi: string;
+  name_en: string;
+  questionId: string;
 }
 
 export interface Question {
-    id: string;
-    name_vi: string;
-    name_en: string;
-    description_vi: string;
-    description_en: string;
-    ordering: number;
-    hint: string;
-    answers: Answer[];
+  id: string;
+  name_vi: string;
+  name_en: string;
+  description_vi: string;
+  description_en: string;
+  ordering: number;
+  hint: string;
+  answers: Answer[];
 }
 
 export interface QuizAnswer {
@@ -25,17 +26,23 @@ export interface QuizAnswer {
 }
 
 export interface QuizResult {
+  id: number;
   questionId: string;
-  selectedOption: number;
+  answerId: string;
   isCorrect: boolean;
-  correctAnswerId: string;
+  quizAuditId: number;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+  updated_by: string;
+  deleted_at: string | null;
 }
 
 interface QuizState {
   // Quiz data
   questions: Question[];
   quizTitle: string;
-
+  quizId?: string; // Optional, if you need to track the quiz ID
   // Current state
   currentQuestionIndex: number;
   selectedAnswer: string;
@@ -51,6 +58,8 @@ interface QuizState {
   // Actions
   setQuestions: (questions: Question[]) => void;
   setQuizTitle: (title: string) => void;
+  setQuizId: (id: string) => void; // Optional setter for quiz ID
+
   setSelectedAnswer: (answer: string) => void;
   toggleHint: () => void;
   saveAnswer: () => void;
@@ -75,6 +84,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   // Initial state
   questions: [],
   quizTitle: "",
+  quizId: "", // Optional quiz ID
   currentQuestionIndex: 0,
   selectedAnswer: "",
   showHint: false,
@@ -88,6 +98,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   setQuestions: (questions) => set({ questions }),
 
   setQuizTitle: (title) => set({ quizTitle: title }),
+
+  setQuizId: (id) => set({ quizId: id }), // Optional setter for quiz ID
 
   setSelectedAnswer: (answer) => set({ selectedAnswer: answer }),
 
@@ -110,7 +122,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
     // Remove existing answer for this question if any
     const filteredAnswers = state.answers.filter(
-      answer => answer.questionId !== currentQuestion.id
+      (answer) => answer.questionId !== currentQuestion.id
     );
 
     set({
@@ -127,33 +139,28 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   submitQuiz: async () => {
     const state = get();
-    
+
     if (state.answers.length !== state.questions.length) {
-      console.error('Not all questions answered');
+      console.error("Not all questions answered");
       return;
     }
 
     set({ isSubmitting: true });
 
     try {
-      // Call API to submit all answers
-      const response = await fetch('/api/quiz/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          answers: state.answers,
-        }),
-      });
+      // Import your service at the top: import { submitQuiz } from 'path/to/service';
+      // Prepare payload for the service
+      const payload = {
+        quizId: "", // Set quizId if available in your state or props
+        questions: state.answers.map((a) => ({
+          questionId: a.questionId,
+          answerId: a.answerId,
+        })),
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to submit quiz');
-      }
-
-      const result = await response.json();
+      const result = await submitQuiz(payload);
       const quizResults: QuizResult[] = result.results;
-      const score = quizResults.filter(r => r.isCorrect).length;
+      const score = quizResults.filter((r) => r.isCorrect).length;
 
       set({
         results: quizResults,
@@ -161,9 +168,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         isSubmitting: false,
         isComplete: true,
       });
-
     } catch (error) {
-      console.error('Error submitting quiz:', error);
+      console.error("Error submitting quiz:", error);
       set({ isSubmitting: false });
       // Handle error appropriately - could show toast or error message
     }
@@ -174,12 +180,14 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     if (state.currentQuestionIndex < state.questions.length - 1) {
       const nextIndex = state.currentQuestionIndex + 1;
       const existingAnswer = state.answers.find(
-        answer => answer.questionId === state.questions[nextIndex].id
+        (answer) => answer.questionId === state.questions[nextIndex].id
       );
-      
+
       set({
         currentQuestionIndex: nextIndex,
-        selectedAnswer: existingAnswer ? existingAnswer.selectedOption.toString() : "",
+        selectedAnswer: existingAnswer
+          ? existingAnswer.selectedOption.toString()
+          : "",
         showHint: false,
       });
     }
@@ -190,12 +198,14 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     if (state.currentQuestionIndex > 0) {
       const prevIndex = state.currentQuestionIndex - 1;
       const existingAnswer = state.answers.find(
-        answer => answer.questionId === state.questions[prevIndex].id
+        (answer) => answer.questionId === state.questions[prevIndex].id
       );
-      
+
       set({
         currentQuestionIndex: prevIndex,
-        selectedAnswer: existingAnswer ? existingAnswer.selectedOption.toString() : "",
+        selectedAnswer: existingAnswer
+          ? existingAnswer.selectedOption.toString()
+          : "",
         showHint: false,
       });
     }
@@ -222,8 +232,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   getProgress: () => {
     const state = get();
-    return state.questions.length > 0 
-      ? (state.answers.length / state.questions.length) * 100 
+    return state.questions.length > 0
+      ? (state.answers.length / state.questions.length) * 100
       : 0;
   },
 
@@ -251,8 +261,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   hasAnsweredCurrentQuestion: () => {
     const state = get();
     const currentQuestion = state.getCurrentQuestion();
-    return currentQuestion ? state.answers.some(
-      answer => answer.questionId === currentQuestion.id
-    ) : false;
+    return currentQuestion
+      ? state.answers.some((answer) => answer.questionId === currentQuestion.id)
+      : false;
   },
 }));
