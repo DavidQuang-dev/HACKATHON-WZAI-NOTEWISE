@@ -21,17 +21,13 @@ export const shareNote = async (id: string, email: string) => {
 }
 
 export const getSharedNoteById = async (id: string) => {
-    // Tạo API call riêng không cần authentication
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1"}/note/shared/${id}`, {
-        method: 'GET',
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1"; 
+    const res = await api.get(`/note/shared/${id}`, {
+        baseURL: baseUrl,
         headers: {
             'Content-Type': 'application/json',
         },
+        // Không gửi credentials hoặc token nếu không cần authentication
     });
-    
-    if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    
-    return res.json();
+    return res.data;
 }

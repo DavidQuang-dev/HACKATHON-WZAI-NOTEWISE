@@ -6,8 +6,12 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getNoteById } from "@/services/notes.api";
 import { useAuthStore } from "@/store/authStore";
+import { useNotesStore } from "@/store/notesStore";
+import { Note } from "@/types/notes";
 import { toast } from "sonner";
 import { Loader2, FileText, ArrowLeft, Lock } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function SharedNotePage() {
   const params = useParams();
@@ -17,10 +21,19 @@ export default function SharedNotePage() {
   const user = useAuthStore((state) => state.user);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
+  // Get notes store state and actions
+  const notes = useNotesStore((state) => state.notes);
+  const setNote = useNotesStore((state) => state.setNote);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
-  const [noteData, setNoteData] = useState<any>(null);
+  const [noteData, setNoteData] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Helper function to find note in store by ID
+  const findNoteInStore = (id: string): Note | null => {
+    return notes.find((note) => note.id === id) || null;
+  };
 
   // Tự động xác thực khi user đã đăng nhập
   useEffect(() => {
@@ -36,12 +49,28 @@ export default function SharedNotePage() {
       setIsSubmitting(true);
       setIsLoading(true);
 
-      // Sử dụng API thông thường để lấy note (đã có authentication)
-      const note = await getNoteById(noteId);
-      setNoteData(note);
-      setIsVerified(true);
+      // First, try to get the note from the store
+      let note = findNoteInStore(noteId);
 
-      toast.success("Đã tải ghi chú thành công!");
+      if (note) {
+        // Note found in store, use it directly
+        console.log("Note found in store:", note);
+        setNoteData(note);
+        setNote?.(note); // Update the store's current note
+        toast.success("Đã tải ghi chú thành công từ bộ nhớ!");
+      } else {
+        // Note not in store, fetch from API
+        const apiResponse = await getNoteById(noteId);
+        console.log("API response:", apiResponse);
+        // API response has nested structure: { data: Note }
+        const actualNote = apiResponse.data || apiResponse;
+        console.log("Processed note data:", actualNote);
+        setNoteData(actualNote);
+        setNote?.(actualNote); // Update the store's current note
+        toast.success("Đã tải ghi chú thành công!");
+      }
+
+      setIsVerified(true);
     } catch (error) {
       console.error("Load shared note error:", error);
       toast.error(
@@ -163,23 +192,33 @@ export default function SharedNotePage() {
           <CardContent className="space-y-6">
             {noteData?.description_vi && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-2">Mô tả:</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  {noteData.description_vi}
-                </p>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Tóm tắt notes:
+                </h3>
+                <Markdown remarkPlugins={[remarkGfm]}>
+                  {noteData?.summarizedTranscript?.description_vi}
+                </Markdown>
               </div>
             )}
 
             <div className="prose max-w-none">
-              {noteData?.content ? (
-                <div
-                  className="bg-white p-6 rounded-lg border"
-                  dangerouslySetInnerHTML={{ __html: noteData.content }}
-                />
+              {noteData?.summarizedTranscript?.description_vi ? (
+                <div className="bg-white p-6 rounded-lg border">
+                  <h4 className="text-lg font-semibold mb-4 text-gray-900">
+                    Nội dung note
+                  </h4>
+
+                  <Markdown remarkPlugins={[remarkGfm]}>
+                    {noteData?.transcript?.description_vi}
+                  </Markdown>
+                </div>
               ) : (
                 <div className="bg-white p-6 rounded-lg border text-center text-gray-500">
                   <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p>Nội dung ghi chú sẽ được hiển thị tại đây</p>
+                  <p className="text-sm mt-2">
+                    Ghi chú này có thể chưa có nội dung được tóm tắt.
+                  </p>
                 </div>
               )}
             </div>
