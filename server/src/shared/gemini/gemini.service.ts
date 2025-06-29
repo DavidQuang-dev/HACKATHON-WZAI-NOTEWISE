@@ -42,6 +42,9 @@ export interface QuizResponse {
   description_en: string;
   totalQuestion: number,
   estimatedTime: number,
+  Questions?: {
+    
+  }
 }
 
 @Injectable()
@@ -151,7 +154,7 @@ export class GeminiService {
         },
       });
 
-      const responseText = (await result.response).text(); 
+      const responseText = (await result.response).text();
       const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
       const jsonContent = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
 
@@ -180,7 +183,7 @@ export class GeminiService {
         },
       });
       const response = await result.response;
-      const responseText = (await result.response).text(); 
+      const responseText = (await result.response).text();
       const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
       const jsonContent = jsonMatch ? jsonMatch[1].trim() : responseText.trim();
 
@@ -219,9 +222,10 @@ export class GeminiService {
         description_vi: response.description_vi || response.description,
         description_en: response.description_en || response.description,
         totalQuestion: response.totalQuestion || 0,
-        estimatedTime: response.estimatedTime || 30, 
+        estimatedTime: response.estimatedTime || 30,
       };
-      return response.text();
+      this.logger.log(`Quiz generated with ${quizResponse.totalQuestion} questions and estimated time ${quizResponse.estimatedTime}`);
+      return quizResponse;
     } catch (error) {
       this.logger.error('Failed to generate full transcription', error);
       throw new BadRequestException('Failed to generate full transcription');
