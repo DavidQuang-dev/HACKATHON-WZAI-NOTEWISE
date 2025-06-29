@@ -28,6 +28,8 @@ export default function UploadPage() {
     setIsUploading(true);
     try {
       const data = await uploadFile(selectedFile);
+      console.log(data);
+
       setFileUrl(data.data?.url || "");
       toast.success("Tải file lên thành công!");
     } catch (error) {
