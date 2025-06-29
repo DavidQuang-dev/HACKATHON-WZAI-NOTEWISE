@@ -25,6 +25,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { MainLayout } from "@/components/main-layout";
+import { uploadFile } from "@/services/upload.api";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function RecordPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -36,6 +39,9 @@ export default function RecordPage() {
   );
   const audioChunks = useRef<Blob[]>([]);
   const audioStream = useRef<MediaStream | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const router = useRouter();
 
   // Timer
   useEffect(() => {
@@ -90,11 +96,46 @@ export default function RecordPage() {
       }
     };
 
-    recorder.onstop = () => {
+    recorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
       const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url); // 👈 Lưu lại URL để nghe lại
-      console.log("🔊 Audio URL:", url);
+      setAudioUrl(url);
+      console.log("� Audio URL:", url);
+
+      // Convert blob to file and navigate to processing immediately
+      try {
+        setIsUploading(true);
+
+        // Navigate to processing page immediately
+        toast.success("Đang xử lý recording...");
+        router.push("/processing");
+
+        const audioFile = new File(
+          [audioBlob],
+          `recording-${Date.now()}.webm`,
+          {
+            type: "audio/webm",
+          }
+        );
+
+        console.log("Uploading recorded audio...", audioFile);
+        const response = await uploadFile(audioFile);
+        console.log("Upload response:", response);
+
+        // Store processed data for processing page to access
+        localStorage.setItem("processedData", JSON.stringify(response.data));
+        localStorage.setItem("processingComplete", "true");
+      } catch (error) {
+        console.error("Upload error:", error);
+        localStorage.setItem(
+          "processingError",
+          JSON.stringify({
+            message: "Lỗi upload recording",
+            error: error,
+          })
+        );
+        setIsUploading(false);
+      }
     };
 
     recorder.start();
@@ -135,8 +176,6 @@ export default function RecordPage() {
     "Keep your device close to the speaker",
     "Take breaks for better transcription",
   ];
-
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   return (
     <MainLayout>
@@ -240,27 +279,26 @@ export default function RecordPage() {
                         onClick={stopRecording}
                         variant="destructive"
                         size="lg"
+                        disabled={isUploading}
                       >
-                        <Square className="w-5 h-5 mr-2" />
-                        Stop & Process
+                        {isUploading ? (
+                          <>
+                            <span className="animate-spin mr-2 h-5 w-5 border-2 border-white border-t-transparent rounded-full inline-block" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Square className="w-5 h-5 mr-2" />
+                            Stop & Process
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
-            {audioUrl && (
-              <div className="mt-6 text-center">
-                <h3 className="text-lg font-medium mb-2 text-gray-800">
-                  Playback
-                </h3>
-                <audio
-                  controls
-                  src={audioUrl}
-                  className="w-full max-w-md mx-auto"
-                />
-              </div>
-            )}
+
             {/* Recording Tips */}
             <Card className="bg-white/60 backdrop-blur-sm w-full max-w-xl">
               <CardHeader>
