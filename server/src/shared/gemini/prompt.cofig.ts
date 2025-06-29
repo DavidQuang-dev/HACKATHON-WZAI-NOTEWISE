@@ -76,7 +76,7 @@ ${transcribe}
 {
   "name_vi": "Tiêu đề ngắn bằng tiếng Việt",
   "name_en": "Short title in English",
-  "description": "Tóm tắt nội dung bằng tiếng Việt",
+  "description_vi": "Tóm tắt nội dung bằng tiếng Việt",
   "description_en": "Summarized content in English"
 }
 \`\`\`
@@ -145,7 +145,7 @@ Hãy xử lý văn bản transcribe ngay bây giờ:
 
 export const quizPrompt = (transcribe: string): string => {
   return `
-Bạn là một AI chuyên gia tạo bài kiểm tra trắc nghiệm từ nội dung học tập. Tạo chính xác 10 câu hỏi trắc nghiệm dựa trên nội dung được cung cấp.
+Bạn là một AI chuyên gia tạo bài kiểm tra trắc nghiệm từ nội dung học tập. Hãy tạo chính xác 10 câu hỏi trắc nghiệm dựa trên nội dung được cung cấp bên dưới.
 
 ## NỘI DUNG HỌC TẬP:
 ${transcribe}
@@ -154,47 +154,45 @@ ${transcribe}
 - Tạo đúng 10 câu hỏi trắc nghiệm
 - Mỗi câu có 4 lựa chọn (A, B, C, D)
 - Có 1 đáp án đúng duy nhất
-- Có gợi ý (hint) cho mỗi câu
-- Câu hỏi dựa trên nội dung đã cung cấp
-- Không bịa đặt thông tin
+- Mỗi câu có gợi ý (hint)
+- Nội dung câu hỏi bám sát nội dung học tập, không bịa đặt
+- Không được thêm bất kỳ giải thích, markdown hay văn bản dư thừa
 
-## ĐỊNH DẠNG KẾT QUẢ (CHỈ TRẢ VỀ JSON NHƯ SAU):
+## ĐỊNH DẠNG JSON (TRẢ VỀ DUY NHẤT):
 {
-  "quiz": {
-    "name_vi": "Tiêu đề bài kiểm tra bằng tiếng Việt",
-    "name_en": "Quiz title in English",
-    "description_vi": "Mô tả chi tiết về nội dung bài kiểm tra bằng tiếng Việt",
-    "description_en": "Detailed quiz description in English",
-    "estimatedTime": 20,
-    "questions": [
-      {
-        "id": 1,
-        "question": "Nội dung câu hỏi?",
-        "answer": [
-          { "id": "A", "content": "Lựa chọn A" },
-          { "id": "B", "content": "Lựa chọn B" },
-          { "id": "C", "content": "Lựa chọn C" },
-          { "id": "D", "content": "Lựa chọn D" }
-        ],
-        "correctAnswer": "A",
-        "hint": "Gợi ý cho câu hỏi này"
-      }
-      // ... các câu tiếp theo
-    ]
-  }
+  "name_vi": "Tiêu đề bài kiểm tra bằng tiếng Việt",
+  "name_en": "Quiz title in English",
+  "description_vi": "Mô tả chi tiết về nội dung bài kiểm tra bằng tiếng Việt",
+  "description_en": "Detailed quiz description in English",
+  "totalQuestion": 10,
+  "estimatedTime": 20,
+  "questions": [
+    {
+      "id": 1,
+      "question": "Nội dung câu hỏi?",
+      "answer": [
+        { "id": "A", "content": "Lựa chọn A" },
+        { "id": "B", "content": "Lựa chọn B" },
+        { "id": "C", "content": "Lựa chọn C" },
+        { "id": "D", "content": "Lựa chọn D" }
+      ],
+      "correctAnswer": "A",
+      "hint": "Gợi ý cho câu hỏi này"
+    }
+    // ... các câu còn lại
+  ]
 }
 
 ## LƯU Ý QUAN TRỌNG:
-- CHỈ TRẢ VỀ JSON - không thêm markdown, giải thích hay văn bản khác
-- Đảm bảo JSON format chính xác, không có lỗi syntax
-- Tạo đúng 10 câu hỏi (id từ 1 đến 10)
-- Câu hỏi phải rõ ràng, không gây nhầm lẫn
-- Các lựa chọn sai phải hợp lý, không quá hiển nhiên
-- Hint phải hữu ích nhưng không tiết lộ đáp án trực tiếp
-- Estimated time nên phù hợp với độ khó của bài kiểm tra (thường từ 15-30 phút)
+- Chỉ trả về JSON đúng theo định dạng trên, không bao gồm \`\`\`, markdown hay văn bản khác
+- Phải có đúng 10 câu hỏi, \`totalQuestion\` = 10
+- \`estimatedTime\` nên từ 15–30 phút
+- Các lựa chọn sai phải hợp lý, không quá dễ đoán
+- Hint phải có ích nhưng không tiết lộ đáp án
 
-Hãy tạo bài kiểm tra trắc nghiệm dưới dạng JSON ngay bây giờ:`;
-}
+Hãy trả về JSON hợp lệ ngay bây giờ:`;
+};
+
 
 export const chunkingPrompt = (
   roleDescription: string,
