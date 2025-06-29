@@ -83,9 +83,7 @@ export const FileUpload = ({
           <p className="text-gray-600 mb-2">
             or click to browse from your device
           </p>
-          <p className="text-sm text-gray-500 mb-6">
-            Supported formats: {accept} (Max 100MB)
-          </p>
+
           <Button
             type="button"
             size="lg"
