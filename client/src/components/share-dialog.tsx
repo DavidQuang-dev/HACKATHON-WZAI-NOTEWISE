@@ -32,7 +32,7 @@ export function ShareDialog({
       await navigator.clipboard.writeText(shareUrl);
       toast.success("Liên kết đã được sao chép vào clipboard.");
     } catch (error) {
-      toast.error("Không thể sao chép liên kết. Vui lòng thử lại.");
+      toast.error("Unable to copy link. Please try again.");
     } finally {
       setIsCopying(false);
     }

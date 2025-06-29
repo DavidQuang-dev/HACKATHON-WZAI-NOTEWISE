@@ -37,16 +37,17 @@ export default function UploadPage() {
 
       // Store the processed data for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
-      localStorage.setItem("processingComplete", "true");
+
+      toast.success("Xử lý file thành công!");
+
+      // Automatically navigate to processing page after successful upload
+      setTimeout(() => {
+        router.push("/processing");
+      }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Upload error:", error);
-      localStorage.setItem(
-        "processingError",
-        JSON.stringify({
-          message: "Tải file lên thất bại",
-          error: error,
-        })
-      );
+      toast.error("Tải file lên thất bại");
+      throw error;
     } finally {
       setIsUploading(false);
     }
@@ -67,16 +68,17 @@ export default function UploadPage() {
 
       // Store the processed data for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
-      localStorage.setItem("processingComplete", "true");
+
+      toast.success("Xử lý text thành công!");
+
+      // Automatically navigate to processing page after successful upload
+      setTimeout(() => {
+        router.push("/processing");
+      }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Text upload error:", error);
-      localStorage.setItem(
-        "processingError",
-        JSON.stringify({
-          message: "Xử lý text thất bại",
-          error: error,
-        })
-      );
+      toast.error("Xử lý text thất bại");
+      throw error;
     } finally {
       setIsUploading(false);
     }
@@ -93,7 +95,7 @@ export default function UploadPage() {
       // Upload and process text content
       await handleUploadText();
     } else {
-      toast.error("Vui lòng chọn file hoặc nhập nội dung");
+      toast.error("Please select a file or enter content");
     }
   };
 
