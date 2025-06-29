@@ -16,11 +16,14 @@ import Link from "next/link";
 import { useNotesStore } from "@/store/notesStore";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardPage() {
   const notes = useNotesStore((state) => state.notes);
   const fetchNotes = useNotesStore((state) => state.fetchNotes);
   const isLoading = useNotesStore((state) => state.isLoading);
+
+  const {user} = useAuth();
 
   useEffect(() => {
     fetchNotes();
@@ -43,7 +46,7 @@ export default function DashboardPage() {
             Welcome back!
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
-            Hello, Sarah!
+            Hello, {user?.name}!
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Ready to dive into your studies? Upload your lecture files or start
