@@ -4,6 +4,7 @@ import { SummarizedTranscript } from 'src/modules/summarized-transcript/entities
 import { Transcript } from 'src/modules/transcript/entities/transcript.entity';
 
 export class HandleAudioFileResponse {
+  noteId: string;
   summary: SummarizedTranscript;
   fullTranscription: Transcript;
   quiz: Quiz;
