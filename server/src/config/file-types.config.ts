@@ -15,6 +15,7 @@ export const FILE_UPLOAD_CONFIG = {
     'audio/wav', // WAV
     'audio/aac', // AAC
     'audio/webm', // WebM (thêm để hỗ trợ)
+    'audio/x-m4a'
   ],
 
   // Video files (chỉ MP4)
@@ -45,6 +46,7 @@ export const FILE_UPLOAD_CONFIG = {
       'audio/aac': 'AAC',
       'video/mp4': 'MP4',
       'audio/webm': 'WEBM',
+      'audio/x-m4a': 'M4A',
     };
   },
 };
