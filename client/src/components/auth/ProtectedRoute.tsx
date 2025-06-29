@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 
 interface ProtectedRouteProps {
@@ -10,13 +10,18 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { accessToken, hasHydrated } = useAuthStore();
 
   useEffect(() => {
     if (hasHydrated && !accessToken) {
-      router.replace("/"); // Redirect về trang login/home nếu chưa đăng nhập
+      // Lưu current URL vào localStorage để redirect lại sau khi login
+      localStorage.setItem("returnUrl", pathname);
+
+      // Redirect đến auth page (root page)
+      router.replace("/");
     }
-  }, [accessToken, hasHydrated, router]);
+  }, [accessToken, hasHydrated, router, pathname]);
 
   if (!hasHydrated) {
     return (

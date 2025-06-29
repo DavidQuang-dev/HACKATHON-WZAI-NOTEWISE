@@ -93,6 +93,126 @@ export class FileService {
     }
   }
 
+  async processTextContent(text: string): Promise<HandleAudioFileResponse> {
+    try {
+      const [summary, fullTranscribeData, quizData, noteData] = await Promise.all([
+        this.geminiService.generateSummary(text).catch(error => {
+          this.logger.error('Summary generation failed:', error.message);
+          throw new BadRequestException(`Summary generation failed: ${error.message}`);
+        }),
+        this.geminiService.generateFullTranscribe(text).catch(error => {
+          this.logger.error('Full transcription generation failed:', error.message);
+          throw new BadRequestException(`Full transcription generation failed: ${error.message}`);
+        }),
+        this.geminiService.generateQuiz(text).catch(error => {
+          this.logger.error('Quiz generation failed:', error.message);
+          throw new BadRequestException(`Quiz generation failed: ${error.message}`);
+        }),
+        this.geminiService.generateNote(text).catch(error => {
+          this.logger.error('Note generation failed:', error.message);
+          throw new BadRequestException(`Note generation failed: ${error.message}`);
+        }),
+      ]);
+
+      if (!summary || !fullTranscribeData || !quizData || !noteData) {
+        this.logger.error('AI generation failed - one or more results are null/undefined');
+        throw new BadRequestException('AI generation failed.');
+      }
+      this.logger.log('AI generation completed successfully.');
+
+      this.logger.log('Saving summary, full transcription, and quiz to the database...');
+      const [createdSummary, createdFullTranscription, createdQuiz] = await Promise.all([
+        this.summaryService.create({
+          name_vi: summary.name_vi,
+          name_en: summary.name_en,
+          description_vi: summary.description_vi,
+          description_en: summary.description_en,
+        }, []).catch(error => {
+          this.logger.error('Summary creation failed:', error.message);
+          throw new BadRequestException(`Summary creation failed: ${error.message}`);
+        }),
+        this.transcriptService.create({
+          name_vi: fullTranscribeData.name_vi,
+          name_en: fullTranscribeData.name_en,
+          description_vi: fullTranscribeData.description_vi,
+          description_en: fullTranscribeData.description_en,
+        }, []).catch(error => {
+          this.logger.error('Transcript creation failed:', error.message);
+          throw new BadRequestException(`Transcript creation failed: ${error.message}`);
+        }),
+        this.quizService.create({
+          name_vi: quizData.name_vi,
+          name_en: quizData.name_en,
+          description_vi: quizData.description_vi,
+          description_en: quizData.description_en,
+          totalQuestion: quizData.totalQuestion,
+          estimatedTime: quizData.estimatedTime,
+        }, []).catch(error => {
+          this.logger.error('Quiz creation failed:', error.message);
+          throw new BadRequestException(`Quiz creation failed: ${error.message}`);
+        })
+      ]);
+
+      const note = await this.noteService.create({
+        name_vi: noteData.name_vi,
+        name_en: noteData.name_en,
+        description_vi: noteData.description_vi,
+        description_en: noteData.description_en,
+        summarizedTranscript: createdSummary,
+        transcript: createdFullTranscription,
+        quiz: createdQuiz,
+      }, []).catch(error => {
+        this.logger.error('Note creation failed:', error.message);
+        throw new BadRequestException(`Note creation failed: ${error.message}`);
+      });
+
+      // add questions to quiz 
+      const questionEntities = await Promise.all(
+        (quizData.questions ?? []).map(async (q, idx) => {
+          const question = await this.questionService.create({
+            name_vi: q.name_vi,
+            name_en: q.name_en,
+            description_vi: q.description_vi,
+            description_en: q.description_en,
+            ordering: q.ordering || idx + 1,
+            hint: q.hint,
+            quiz: createdQuiz,
+          }, []);
+
+          const answerEntities = await Promise.all(
+            q.answers.map((a) =>
+              this.answerService.create({
+                name_vi: a.content_vi,
+                name_en: a.content_en,
+                isCorrect: a.isCorrect,
+                question: question,
+              }, [])
+            )
+          );
+
+          return { ...question, answers: answerEntities };
+        })
+      );
+
+      const response: HandleAudioFileResponse = {
+        noteId: note.id.toString(),
+        summary: createdSummary,
+        fullTranscription: createdFullTranscription,
+        quiz: createdQuiz
+      };
+
+      return response;
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof HttpException) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      throw new BadRequestException(`File processing failed: ${error.message}`);
+    }
+  }
+
+
   async extractTranscribe(file: Express.Multer.File): Promise<HandleAudioFileResponse> {
     try {
       this.logger.log(`Starting extractTranscribe for file: ${file?.originalname}`);

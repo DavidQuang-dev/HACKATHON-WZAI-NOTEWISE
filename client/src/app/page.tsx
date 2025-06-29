@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, BookOpen, Mail } from "lucide-react";
+import { GraduationCap, BookOpen, Mail, Info } from "lucide-react";
 import Link from "next/link";
 import { CardContent } from "@/components/ui/card";
 import { LoginButton } from "@/components/auth/google-login-button";
@@ -12,8 +12,16 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [returnUrl, setReturnUrl] = useState<string | null>(null);
 
   const loginWithEmail = useAuthStore((state) => state.loginWithEmail);
+
+  useEffect(() => {
+    // Kiểm tra có returnUrl không để hiển thị thông báo
+    const url = localStorage.getItem("returnUrl");
+    setReturnUrl(url);
+  }, []);
+
   const handleLoginWithEmail = () => {
     if (email.trim() === "") {
       alert("Vui lòng nhập email của bạn");
@@ -44,6 +52,24 @@ export default function LoginPage() {
               Welcome back
             </h2>
           </div>
+
+          {/* Return URL Notification */}
+          {returnUrl && returnUrl.includes("/shared/") && (
+            <div className="mb-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-800 mb-1">
+                    Truy cập ghi chú được chia sẻ
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    Bạn đang truy cập một ghi chú được chia sẻ. Sau khi đăng
+                    nhập, bạn sẽ được chuyển đến nội dung ghi chú.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Login Form */}
           <CardContent className="space-y-5 relative z-10">

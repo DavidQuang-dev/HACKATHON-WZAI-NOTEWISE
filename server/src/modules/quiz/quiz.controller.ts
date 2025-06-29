@@ -13,30 +13,6 @@ export class QuizController {
     constructor(private readonly quizService: QuizService) { }
 
     @Public()
-    @Get()
-    @ApiOperation({
-        summary: 'Get all quizzes',
-        description: 'Retrieve a paginated list of all quizzes in the system'
-    })
-    @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
-    @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page' })
-    @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term' })
-    @ApiQuery({ name: 'sortBy', required: false, type: String, description: 'Sort by field' })
-    @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'], description: 'Sort order' })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        description: 'Successfully retrieved all quizzes',
-        type: PaginatedResponseDto<Quiz>,
-    })
-    @ApiResponse({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        description: 'Internal server error',
-    })
-    async findAll(@Query() filterDto: BaseFilterDto): Promise<PaginatedResponseDto<Quiz>> {
-        return this.quizService.findAll(filterDto, ['questions', 'questions.answers'], []);
-    }
-
-    @Public()
     @Get(':id')
     @ApiOperation({
         summary: 'Get quiz by ID',

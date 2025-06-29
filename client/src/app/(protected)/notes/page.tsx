@@ -26,6 +26,8 @@ import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShareDialog } from "@/components/share-dialog";
 import { useState } from "react";
+import { shareNote } from "@/services/notes.api";
+import { toast } from "sonner";
 
 export default function NotesPage() {
   const notes = useNotesStore((state) => state.notes);
@@ -37,10 +39,13 @@ export default function NotesPage() {
   }, [fetchNotes]);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+
   const handleShare = (note: any) => {
-    const url = `${window.location.origin}/notes/${note.id}`;
+    // Tạo link chia sẻ trỏ đến route protected shared
+    const url = `${window.location.origin}/shared/${note.id}`;
     setShareUrl(url);
     setShareOpen(true);
+    toast.success("Liên kết chia sẻ đã được tạo!");
   };
 
   return (
@@ -168,7 +173,9 @@ export default function NotesPage() {
                               : "N/A"}
                           </TableCell>
                           <TableCell className="text-gray-600 max-w-xs w-1/3 align-middle">
-                            <div className="truncate">{note.description}</div>
+                            <div className="truncate">
+                              {note.description_vi}
+                            </div>
                           </TableCell>
                           <TableCell className="w-1/6 align-middle">
                             <div className="flex items-center gap-2">
