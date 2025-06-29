@@ -10,7 +10,7 @@ import { Upload, FileAudio, FileText, Sparkles } from "lucide-react";
 import { MainLayout } from "@/components/main-layout";
 import Link from "next/link";
 import { FileUpload } from "@/components/upload";
-import { uploadFile } from "@/services/upload.api";
+import { uploadFile, uploadText } from "@/services/upload.api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -26,26 +26,27 @@ export default function UploadPage() {
     if (!selectedFile) return;
 
     setIsUploading(true);
+
+    // Navigate to processing page immediately
+    toast.success("Đang xử lý file...");
+    router.push("/processing");
+
     try {
       const response = await uploadFile(selectedFile);
       console.log("Upload response:", response);
 
-      // Store the processed data instead of URL
-      setProcessedData(response.data);
-
-      // Store in localStorage for processing page to access
+      // Store the processed data for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
-
-      toast.success("Xử lý file thành công!");
-
-      // Automatically navigate to processing page after successful upload
-      setTimeout(() => {
-        router.push("/processing");
-      }, 1000); // Small delay to show success message
+      localStorage.setItem("processingComplete", "true");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Tải file lên thất bại");
-      throw error;
+      localStorage.setItem(
+        "processingError",
+        JSON.stringify({
+          message: "Tải file lên thất bại",
+          error: error,
+        })
+      );
     } finally {
       setIsUploading(false);
     }
@@ -55,32 +56,27 @@ export default function UploadPage() {
     if (!textContent.trim()) return;
 
     setIsUploading(true);
-    try {
-      // Create a Blob from text content to send as file
-      const textBlob = new Blob([textContent], { type: "text/plain" });
-      const textFile = new File([textBlob], "text-content.txt", {
-        type: "text/plain",
-      });
 
-      const response = await uploadFile(textFile);
+    // Navigate to processing page immediately
+    toast.success("Đang xử lý text...");
+    router.push("/processing");
+
+    try {
+      const response = await uploadText(textContent.trim());
       console.log("Text upload response:", response);
 
-      // Store the processed data
-      setProcessedData(response.data);
-
-      // Store in localStorage for processing page to access
+      // Store the processed data for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
-
-      toast.success("Xử lý text thành công!");
-
-      // Automatically navigate to processing page after successful upload
-      setTimeout(() => {
-        router.push("/processing");
-      }, 1000); // Small delay to show success message
+      localStorage.setItem("processingComplete", "true");
     } catch (error) {
       console.error("Text upload error:", error);
-      toast.error("Xử lý text thất bại");
-      throw error;
+      localStorage.setItem(
+        "processingError",
+        JSON.stringify({
+          message: "Xử lý text thất bại",
+          error: error,
+        })
+      );
     } finally {
       setIsUploading(false);
     }
@@ -89,25 +85,13 @@ export default function UploadPage() {
   const handleGenerate = async () => {
     if (selectedFile && !processedData) {
       // Upload and process file
-      try {
-        await handleUploadFile();
-        // Navigation happens automatically in handleUploadFile
-      } catch (error) {
-        // Error already handled in handleUploadFile
-        return;
-      }
+      await handleUploadFile();
     } else if (processedData) {
       // File already processed
       router.push("/processing");
     } else if (textContent.trim()) {
       // Upload and process text content
-      try {
-        await handleUploadText();
-        // Navigation happens automatically in handleUploadText
-      } catch (error) {
-        // Error already handled in handleUploadText
-        return;
-      }
+      await handleUploadText();
     } else {
       toast.error("Vui lòng chọn file hoặc nhập nội dung");
     }
