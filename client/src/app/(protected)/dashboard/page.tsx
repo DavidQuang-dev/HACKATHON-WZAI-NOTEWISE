@@ -10,20 +10,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, Eye, Mic } from "lucide-react";
+import { Upload, Eye, Mic, Share2 } from "lucide-react";
 import { MainLayout } from "@/components/main-layout";
 import Link from "next/link";
 import { useNotesStore } from "@/store/notesStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { ShareDialog } from "@/components/share-dialog";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const notes = useNotesStore((state) => state.notes);
   const fetchNotes = useNotesStore((state) => state.fetchNotes);
   const isLoading = useNotesStore((state) => state.isLoading);
 
-  const {user} = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchNotes();
@@ -35,6 +37,16 @@ export default function DashboardPage() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
     .slice(0, 5);
+
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const handleShare = (note: any) => {
+    // Tạo link chia sẻ trỏ đến route protected shared
+    const url = `${window.location.origin}/shared/${note.id}`;
+    setShareUrl(url);
+    setShareOpen(true);
+    toast.success("Liên kết chia sẻ đã được tạo!");
+  };
 
   return (
     <MainLayout>
@@ -147,8 +159,8 @@ export default function DashboardPage() {
                     <TableHead className="font-semibold text-gray-700 w-2/5">
                       Summary
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-700 w-32 text-center">
-                      Action
+                    <TableHead className="font-semibold text-gray-700 w-1/6 text-center">
+                      Actions
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -196,19 +208,32 @@ export default function DashboardPage() {
                               : "N/A"}
                           </TableCell>
                           <TableCell className="text-gray-600 w-2/5">
-                            <div className="truncate">{note.description_vi}</div>
+                            <div className="break-words whitespace-pre-line max-w-full">
+                              {note.description_vi}
+                            </div>
                           </TableCell>
-                          <TableCell className="w-32 text-center">
-                            <Link href={`/notes/${note.id}`}>
+                          <TableCell className="w-1/6 align-middle">
+                            <div className="flex items-center gap-2">
+                              <Link href={`/notes/${note.id}`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-9 px-3 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 font-medium"
+                                >
+                                  <Eye className="mr-1 h-4 w-4" />
+                                  View
+                                </Button>
+                              </Link>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-9 px-4 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 font-medium"
+                                onClick={() => handleShare(note)}
+                                className="h-9 px-3 hover:bg-green-100 hover:text-green-700 transition-all duration-200 font-medium"
                               >
-                                <Eye className="mr-2 h-4 w-4" />
-                                View
+                                <Share2 className="mr-1 h-4 w-4" />
+                                Share
                               </Button>
-                            </Link>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -218,6 +243,11 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        shareUrl={shareUrl}
+      />
     </MainLayout>
   );
 }

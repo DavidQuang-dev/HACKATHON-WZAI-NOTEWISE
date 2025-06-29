@@ -10,15 +10,16 @@ export const FILE_UPLOAD_CONFIG = {
 
   // Audio files (phổ biến)
   AUDIO: [
-    'audio/mpeg',     // MP3
-    'audio/mp3',      // MP3
-    'audio/wav',      // WAV
-    'audio/aac',      // AAC
+    'audio/mpeg', // MP3
+    'audio/mp3', // MP3
+    'audio/wav', // WAV
+    'audio/aac', // AAC
+    'audio/webm', // WebM (thêm để hỗ trợ)
   ],
 
   // Video files (chỉ MP4)
   VIDEO: [
-    'video/mp4',      // MP4
+    'video/mp4', // MP4
   ],
 
   // Size limits (bytes)
@@ -43,6 +44,7 @@ export const FILE_UPLOAD_CONFIG = {
       'audio/wav': 'WAV',
       'audio/aac': 'AAC',
       'video/mp4': 'MP4',
+      'audio/webm': 'WEBM',
     };
   },
 };

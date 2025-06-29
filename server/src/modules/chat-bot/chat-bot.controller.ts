@@ -100,12 +100,12 @@ export class ChatController {
   @ApiResponse({ status: 200, description: 'Success' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Conversation not found' })
-  async findAllMessageInConversation(
+  async findAllMessageInConversationByNoteId(
     @Param('noteId') noteId: string,
   ) {
     try {
       const messages =
-        await this.chatService.findAllMessageInConversation(noteId);
+        await this.chatService.findAllMessageInConversationByNoteId(noteId);
       return messages;
     } catch (error) {
       throw new HttpException(
