@@ -55,10 +55,11 @@ export class Note extends AbstractEntity {
 
     @ApiProperty({
         description: 'Account who created this note',
-        example: 'c2adc0a6-7af6-4484-8ae0-72349d78e769'
+        example: 'c2adc0a6-7af6-4484-8ae0-72349d78e769',
+        type: () => Account
     })
-    @JoinColumn({ name: 'accountId' })
     @OneToOne(() => Account)
+    @JoinColumn({ name: 'accountId' })
     account: Account;
 
     @ApiProperty({

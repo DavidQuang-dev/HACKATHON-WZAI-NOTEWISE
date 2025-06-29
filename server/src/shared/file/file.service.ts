@@ -210,6 +210,7 @@ export class FileService {
       );
 
       const response: HandleAudioFileResponse = {
+        noteId: note.id.toString(),
         summary: createdSummary,
         fullTranscription: createdFullTranscription,
         quiz: createdQuiz
