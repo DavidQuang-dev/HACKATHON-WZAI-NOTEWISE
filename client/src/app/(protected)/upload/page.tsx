@@ -24,6 +24,12 @@ export default function UploadPage() {
 
     setIsUploading(true);
 
+    // Clear previous data
+    localStorage.removeItem("processedData");
+    localStorage.removeItem("processingComplete");
+    localStorage.removeItem("processingError");
+    localStorage.removeItem("currentNoteId");
+
     // Navigate to processing page immediately
     toast.success("Đang xử lý file...");
     router.push("/processing");
@@ -34,16 +40,19 @@ export default function UploadPage() {
 
       // Store the processed data for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
+      localStorage.setItem("processingComplete", "true");
 
       toast.success("Xử lý file thành công!");
-
-      // Automatically navigate to processing page after successful upload
-      setTimeout(() => {
-        router.push("/processing");
-      }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Tải file lên thất bại");
+      localStorage.setItem(
+        "processingError",
+        JSON.stringify({
+          message: "Lỗi upload file",
+          error: error,
+        })
+      );
       throw error;
     } finally {
       setIsUploading(false);
@@ -55,6 +64,12 @@ export default function UploadPage() {
 
     setIsUploading(true);
 
+    // Clear previous data
+    localStorage.removeItem("processedData");
+    localStorage.removeItem("processingComplete");
+    localStorage.removeItem("processingError");
+    localStorage.removeItem("currentNoteId");
+
     // Navigate to processing page immediately
     toast.success("Đang xử lý text...");
     router.push("/processing");
@@ -65,16 +80,19 @@ export default function UploadPage() {
 
       // Store the processed data for processing page to access
       localStorage.setItem("processedData", JSON.stringify(response.data));
+      localStorage.setItem("processingComplete", "true");
 
       toast.success("Xử lý text thành công!");
-
-      // Automatically navigate to processing page after successful upload
-      setTimeout(() => {
-        router.push("/processing");
-      }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Text upload error:", error);
       toast.error("Xử lý text thất bại");
+      localStorage.setItem(
+        "processingError",
+        JSON.stringify({
+          message: "Lỗi xử lý text",
+          error: error,
+        })
+      );
       throw error;
     } finally {
       setIsUploading(false);

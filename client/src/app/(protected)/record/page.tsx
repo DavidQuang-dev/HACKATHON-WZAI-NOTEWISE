@@ -101,6 +101,12 @@ export default function RecordPage() {
       try {
         setIsUploading(true);
 
+        // Clear previous data
+        localStorage.removeItem("processedData");
+        localStorage.removeItem("processingComplete");
+        localStorage.removeItem("processingError");
+        localStorage.removeItem("currentNoteId");
+
         // Navigate to processing page immediately
         toast.success("Đang xử lý recording...");
         router.push("/processing");
@@ -120,6 +126,7 @@ export default function RecordPage() {
         // Store processed data for processing page to access
         localStorage.setItem("processedData", JSON.stringify(response.data));
         localStorage.setItem("processingComplete", "true");
+        setIsUploading(false);
       } catch (error) {
         console.error("Upload error:", error);
         localStorage.setItem(
