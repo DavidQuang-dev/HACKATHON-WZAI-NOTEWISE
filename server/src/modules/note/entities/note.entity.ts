@@ -3,8 +3,8 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from "ty
 import { AbstractEntity } from "src/common/base/entities/base.entity";
 import { SummarizedTranscript } from "../../summarized-transcript/entities/summarized-transcript.entity";
 import { Transcript } from "../../transcript/entities/transcript.entity";
-import { Question } from "../../question/entities/question.entity";
 import { Account } from "src/modules/account/entities/account.entity";
+import { Quiz } from "../../quiz/entities/quiz.entity";
 
 @Entity('note')
 export class Note extends AbstractEntity {
@@ -21,7 +21,7 @@ export class Note extends AbstractEntity {
         example: 'Ghi chú về cuộc họp',
     })
     @Column({ type: 'varchar', length: 255 })
-    name: string;
+    name_vi: string;
 
     @ApiProperty({
         description: 'Tên ghi chú bằng tiếng Anh',
@@ -35,7 +35,7 @@ export class Note extends AbstractEntity {
         example: 'Ghi chú về cuộc họp với khách hàng',
     })
     @Column({ type: 'text' })
-    description: string;
+    description_vi: string;
 
     @ApiProperty({
         description: 'Mô tả ghi chú bằng tiếng Anh',
@@ -70,12 +70,12 @@ export class Note extends AbstractEntity {
     transcript: Transcript;
 
     @ApiProperty({
-        description: 'Question associated with this note',
-        type: () => Question
+        description: 'Quiz associated with this note',
+        type: () => Quiz
     })
-    @OneToOne(() => Question)
-    @JoinColumn({ name: 'questionId' })
-    question: Question;
+    @OneToOne(() => Quiz)
+    @JoinColumn({ name: 'quizId' })
+    quiz: Quiz;
 
     constructor(partial: Partial<Note>) {
         super();

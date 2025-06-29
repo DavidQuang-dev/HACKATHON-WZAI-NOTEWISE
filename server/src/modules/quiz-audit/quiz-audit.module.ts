@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { QuizAuditService } from './quiz-audit.service';
-import { QuizAuditController } from './quiz-audit.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { QuizAudit } from './entities/quiz-audit.entity';
 
 @Module({
-  controllers: [QuizAuditController],
+  imports: [TypeOrmModule.forFeature([QuizAudit])],
   providers: [QuizAuditService],
+  exports: [QuizAuditService],
 })
 export class QuizAuditModule {}

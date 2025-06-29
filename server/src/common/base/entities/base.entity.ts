@@ -84,7 +84,6 @@ export abstract class AbstractEntity extends BaseEntity {
     @BeforeUpdate()
     setUpdatedByFromContext() {
         const userContext = this.getCurrentUserContext();
-
         if (userContext?.id) {
             this.updated_by = userContext.id;
         }
@@ -96,11 +95,9 @@ export abstract class AbstractEntity extends BaseEntity {
     private getCurrentUserContext(): {
         id: string;
         email: string;
-        role: string;
     } | null {
         try {
             const storage = global.__userContextStorage__;
-
             if (!storage) {
                 console.warn('getCurrentUserContext - Global storage not initialized');
                 return null;

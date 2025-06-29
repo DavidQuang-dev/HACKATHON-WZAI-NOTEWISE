@@ -1,26 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CreateQuizAuditDto } from './dto/create-quiz-audit.dto';
-import { UpdateQuizAuditDto } from './dto/update-quiz-audit.dto';
+import { BaseService } from 'src/common/base/base.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { QuizAudit } from './entities/quiz-audit.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
-export class QuizAuditService {
-  create(createQuizAuditDto: CreateQuizAuditDto) {
-    return 'This action adds a new quizAudit';
+export class QuizAuditService extends BaseService<QuizAudit> {
+  constructor(
+    @InjectRepository(QuizAudit)
+    private readonly quizAuditRepository: Repository<QuizAudit>,
+  ) {
+    super(quizAuditRepository);
   }
 
-  findAll() {
-    return `This action returns all quizAudit`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} quizAudit`;
-  }
-
-  update(id: number, updateQuizAuditDto: UpdateQuizAuditDto) {
-    return `This action updates a #${id} quizAudit`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} quizAudit`;
-  }
 }

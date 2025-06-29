@@ -1,26 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTranscriptDto } from './dto/create-transcript.dto';
-import { UpdateTranscriptDto } from './dto/update-transcript.dto';
+import { BaseService } from 'src/common/base/base.service';
+import { Transcript } from './entities/transcript.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
-export class TranscriptService {
-  create(createTranscriptDto: CreateTranscriptDto) {
-    return 'This action adds a new transcript';
+export class TranscriptService extends BaseService<Transcript> {
+  constructor(
+    @InjectRepository(Transcript)
+    private readonly transcriptRepository: Repository<Transcript>,
+  ) {
+    super(transcriptRepository);
   }
+  
+} 
 
-  findAll() {
-    return `This action returns all transcript`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} transcript`;
-  }
-
-  update(id: number, updateTranscriptDto: UpdateTranscriptDto) {
-    return `This action updates a #${id} transcript`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} transcript`;
-  }
-}
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NjQ0M2M4OS03ZmRmLTRjYmItOWQyOS01MTkzYzhmZjFmMzciLCJlbWFpbCI6InRyb25nbGhxZTE4MDE4NUBmcHQuZWR1LnZuIiwiaXNBY3RpdmUiOnRydWUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MDE3NzYyOSwiZXhwIjoxNzUwMTgxMjI5fQ.emIVwrOpqo8OvbiN8QdB1fQFFdW0iHUK0alACR1RVPU

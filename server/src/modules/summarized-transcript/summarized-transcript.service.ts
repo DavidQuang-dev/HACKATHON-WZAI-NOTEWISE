@@ -1,26 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSummarizedTranscriptDto } from './dto/create-summarized-transcript.dto';
-import { UpdateSummarizedTranscriptDto } from './dto/update-summarized-transcript.dto';
-
+import { BaseService } from 'src/common/base/base.service';
+import { SummarizedTranscript } from './entities/summarized-transcript.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 @Injectable()
-export class SummarizedTranscriptService {
-  create(createSummarizedTranscriptDto: CreateSummarizedTranscriptDto) {
-    return 'This action adds a new summarizedTranscript';
-  }
-
-  findAll() {
-    return `This action returns all summarizedTranscript`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} summarizedTranscript`;
-  }
-
-  update(id: number, updateSummarizedTranscriptDto: UpdateSummarizedTranscriptDto) {
-    return `This action updates a #${id} summarizedTranscript`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} summarizedTranscript`;
+export class SummarizedTranscriptService extends BaseService<SummarizedTranscript> {
+  constructor(
+    @InjectRepository(SummarizedTranscript)
+    private readonly summarizedTranscriptRepository: Repository<SummarizedTranscript>,
+  ) {
+    super(summarizedTranscriptRepository);
   }
 }

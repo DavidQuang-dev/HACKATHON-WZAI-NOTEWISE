@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from "typeorm";
 import { AbstractEntity } from "src/common/base/entities/base.entity";
 import { Note } from "../../note/entities/note.entity";
 
-@Entity('summarized_transcript')
+@Entity('summarizedTranscript')
 export class SummarizedTranscript extends AbstractEntity {
     @ApiProperty({
         description: 'Unique identifier for the summarized transcript',
@@ -18,7 +18,7 @@ export class SummarizedTranscript extends AbstractEntity {
         required: true,
     })
     @Column({ type: 'varchar', length: 255 })
-    name: string;
+    name_vi: string;
 
     @ApiProperty({
         description: 'Tên tóm tắt bằng tiếng Anh',
@@ -34,7 +34,7 @@ export class SummarizedTranscript extends AbstractEntity {
         required: true,
     })
     @Column({ type: 'text' })
-    description: string;
+    description_vi: string;
 
     @ApiProperty({
         description: 'Mô tả tóm tắt bằng tiếng Anh',

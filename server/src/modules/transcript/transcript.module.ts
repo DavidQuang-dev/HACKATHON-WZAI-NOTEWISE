@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TranscriptService } from './transcript.service';
-import { TranscriptController } from './transcript.controller';
+import { Transcript } from './entities/transcript.entity';
+import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
 
 @Module({
-  controllers: [TranscriptController],
+  imports: [TypeOrmModule.forFeature([Transcript])],
   providers: [TranscriptService],
+  exports: [TranscriptService],
 })
-export class TranscriptModule {}
+export class TranscriptModule { }

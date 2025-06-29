@@ -18,7 +18,7 @@ export class Transcript extends AbstractEntity {
         required: true,
     })
     @Column({ type: 'varchar', length: 255 })
-    name: string;
+    name_vi: string;
 
     @ApiProperty({
         description: 'Tên tóm tắt bằng tiếng Anh',
@@ -34,7 +34,7 @@ export class Transcript extends AbstractEntity {
         required: true,
     })
     @Column({ type: 'text' })
-    description: string;
+    description_vi: string;
 
     @ApiProperty({
         description: 'Mô tả tóm tắt bằng tiếng Anh',

@@ -33,7 +33,7 @@ export class Question extends AbstractEntity {
         example: 'This question tests your knowledge of TypeScript interfaces',
     })
     @Column({ type: 'text', nullable: true })
-    description: string;
+    description_vi: string;
 
     @ApiProperty({
         description: 'Detailed description of the question',
@@ -70,14 +70,6 @@ export class Question extends AbstractEntity {
     })
     @OneToMany(() => Answer, (answer) => answer.question)
     answers: Answer[];
-
-    @ApiProperty({
-        description: 'Note that uses this question',
-        type: () => Note,
-        required: false
-    })
-    @OneToOne(() => Note, (note) => note.question)
-    note?: Note;
 
     constructor(partial: Partial<Question>) {
         super();

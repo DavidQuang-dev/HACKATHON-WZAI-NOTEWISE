@@ -12,7 +12,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Enable CORS with all origins
-  app.enableCors();
+  app.enableCors({
+    origin: '*', // Allow all origins
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  });
 
   // Global validation pipe
   app.useGlobalPipes(

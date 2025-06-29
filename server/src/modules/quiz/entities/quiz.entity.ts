@@ -1,7 +1,8 @@
 import { AbstractEntity } from "src/common/base/entities/base.entity";
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from "typeorm";
 import { Question } from '../../question/entities/question.entity';
+import { Note } from '../../note/entities/note.entity';
 
 @Entity('quiz')
 export class Quiz extends AbstractEntity {
@@ -17,7 +18,7 @@ export class Quiz extends AbstractEntity {
         example: 'JavaScript Fundamentals'
     })
     @Column({ type: 'varchar', length: 255 })
-    name: string;
+    name_vi: string;
 
     @ApiProperty({
         description: 'Quiz name in English',
@@ -31,7 +32,7 @@ export class Quiz extends AbstractEntity {
         example: 'A comprehensive quiz covering JavaScript basics'
     })
     @Column({ type: 'text', nullable: true })
-    description: string;
+    description_vi: string;
 
     @ApiProperty({
         description: 'Quiz description in English',
@@ -53,6 +54,14 @@ export class Quiz extends AbstractEntity {
     })
     @Column({ type: 'int', default: 0 })
     estimatedTime: number;
+
+    @ApiProperty({
+        description: 'Note that uses this summarized transcript',
+        type: () => Note,
+        required: false
+    })
+    @OneToOne(() => Note, (note) => note.summarizedTranscript)
+    note?: Note;
 
     @ApiProperty({
         description: 'Questions belonging to this quiz',
